@@ -30,7 +30,33 @@ export function drawLighting(ctx, state, view, lit, bounds, time, applyCam) {
     ctx.fillStyle = `rgba(255,120,60,${0.07 * lit.golden})`;
     ctx.fillRect(0, 0, view.w, view.h);
   }
-  if (lit.night <= 0.02) return;
+  const inView = (x, y, m = 120) => x > bounds.x0 - m && x < bounds.x1 + m && y > bounds.y0 - m && y < bounds.y1 + m;
+  if (lit.night > 0.02) drawDarkness(ctx, state, view, lit, bounds, time, applyCam, inView);
+  // additive glows
+  applyCam(ctx);
+  ctx.globalCompositeOperation = 'lighter';
+  const glow = (x, y, r, color, a) => {
+    const g = ctx.createRadialGradient(x, y, 0, x, y, r);
+    g.addColorStop(0, color); g.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.globalAlpha = a; ctx.fillStyle = g; ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill();
+  };
+  if (lit.night > 0.05) for (const p of state.world.props) if (p.type === 'lamp' && inView(p.x, p.y)) glow(p.x, p.y, 46, 'rgba(255,200,120,0.6)', 0.5 * lit.night);
+  if (lit.night > 0.05) for (const s of state.world.buildings) if (s.neon && inView(s.x, s.y, 200)) glow(s.x + s.w / 2, s.y + s.h + 6, 70, s.neon.color, 0.22 * lit.night);
+  const ph = Math.floor(time * 8) % 2;
+  for (const v of state.vehicles) {
+    if (!inView(v.x, v.y, 100)) continue;
+    if (v.siren && !v.wrecked) glow(v.x, v.y, 60, ph ? 'rgba(255,40,40,0.9)' : 'rgba(40,90,255,0.9)', 0.6 * lit.night + 0.22);
+    if (v.driver && !v.wrecked) {
+      const c = Math.cos(v.a), s = Math.sin(v.a);
+      glow(v.x - c * v.spec.len / 2, v.y - s * v.spec.len / 2, 16, 'rgba(255,30,30,0.8)', 0.6 * lit.night);
+    }
+  }
+  ctx.globalAlpha = 1;
+  ctx.globalCompositeOperation = 'source-over';
+}
+
+// Night: darken the screen, cutting soft holes for every light source.
+function drawDarkness(ctx, state, view, lit, bounds, time, applyCam, inView) {
   if (!lightCanvas || lightCanvas.width !== view.w || lightCanvas.height !== view.h) {
     lightCanvas = document.createElement('canvas');
     lightCanvas.width = view.w; lightCanvas.height = view.h;
@@ -49,7 +75,6 @@ export function drawLighting(ctx, state, view, lit, bounds, time, applyCam) {
     g.addColorStop(0, `rgba(0,0,0,${a})`); g.addColorStop(1, 'rgba(0,0,0,0)');
     L.fillStyle = g; L.beginPath(); L.arc(x, y, r, 0, Math.PI * 2); L.fill();
   };
-  const inView = (x, y, m = 120) => x > bounds.x0 - m && x < bounds.x1 + m && y > bounds.y0 - m && y < bounds.y1 + m;
   for (const p of state.world.props) if (p.type === 'lamp' && inView(p.x, p.y)) hole(p.x, p.y, 70, 0.75);
   for (const s of state.world.buildings) if (s.neon && inView(s.x, s.y, 200)) hole(s.x + s.w / 2, s.y + s.h, 90, 0.6);
   for (const v of state.vehicles) {
@@ -77,25 +102,4 @@ export function drawLighting(ctx, state, view, lit, bounds, time, applyCam) {
   ctx.setTransform(1, 0, 0, 1, 0, 0);
   ctx.drawImage(lightCanvas, 0, 0);
 
-  // additive glows
-  applyCam(ctx);
-  ctx.globalCompositeOperation = 'lighter';
-  const glow = (x, y, r, color, a) => {
-    const g = ctx.createRadialGradient(x, y, 0, x, y, r);
-    g.addColorStop(0, color); g.addColorStop(1, 'rgba(0,0,0,0)');
-    ctx.globalAlpha = a; ctx.fillStyle = g; ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill();
-  };
-  for (const p of state.world.props) if (p.type === 'lamp' && inView(p.x, p.y)) glow(p.x, p.y, 46, 'rgba(255,200,120,0.6)', 0.5 * lit.night);
-  for (const s of state.world.buildings) if (s.neon && inView(s.x, s.y, 200)) glow(s.x + s.w / 2, s.y + s.h + 6, 70, s.neon.color, 0.22 * lit.night);
-  const ph = Math.floor(time * 8) % 2;
-  for (const v of state.vehicles) {
-    if (!inView(v.x, v.y, 100)) continue;
-    if (v.siren && !v.wrecked) glow(v.x, v.y, 60, ph ? 'rgba(255,40,40,0.9)' : 'rgba(40,90,255,0.9)', 0.6 * lit.night + 0.1);
-    if (v.driver && !v.wrecked) {
-      const c = Math.cos(v.a), s = Math.sin(v.a);
-      glow(v.x - c * v.spec.len / 2, v.y - s * v.spec.len / 2, 16, 'rgba(255,30,30,0.8)', 0.6 * lit.night);
-    }
-  }
-  ctx.globalAlpha = 1;
-  ctx.globalCompositeOperation = 'source-over';
 }

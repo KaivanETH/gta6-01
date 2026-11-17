@@ -10,7 +10,7 @@ import { drawHUD } from './hud.js';
 import { buildMapCanvas } from './minimap.js';
 import { stepVehicle, collideVehicles } from './vehicles.js';
 import { updatePeds, managePopulation } from './peds.js';
-import { manageTraffic, driveTraffic, spawnParkedCars, makeTrafficCar } from './traffic.js';
+import { manageTraffic, driveTraffic, spawnParkedCars, makeTrafficCar, adoptTrafficAI } from './traffic.js';
 import { updatePolice, driveCop, copFootAI, clearPolice } from './police.js';
 import { gangAI, processExplosions } from './combat.js';
 import { updatePlayer, exitVehicle } from './player.js';
@@ -35,10 +35,18 @@ buildMapCanvas(world);
 let state = null;
 const AI_HOOKS = { cop: copFootAI, gang: gangAI, boss: gangAI };
 
+// Render resolution adapts down on slow machines (never under automation, so captures stay sharp).
+let renderScale = 1, slowTime = 0;
+const adaptive = !navigator.webdriver && !new URLSearchParams(location.search).has('scene');
 function resize() {
-  view.w = canvas.width = Math.max(640, window.innerWidth);
-  view.h = canvas.height = Math.max(400, window.innerHeight);
-  view.zoomScale = Math.max(0.7, Math.min(1.5, view.h / 720));
+  view.w = canvas.width = Math.round(Math.max(640, window.innerWidth) * renderScale);
+  view.h = canvas.height = Math.round(Math.max(400, window.innerHeight) * renderScale);
+  view.zoomScale = Math.max(0.7, Math.min(1.5, view.h / 720 / renderScale)) * renderScale;
+}
+function adaptResolution(dt) {
+  if (!adaptive) return;
+  slowTime = dt > 0.03 ? slowTime + dt : Math.max(0, slowTime - dt * 0.5);
+  if (slowTime > 2.5 && renderScale > 0.6) { renderScale = Math.round((renderScale - 0.15) * 100) / 100; slowTime = 0; resize(); }
 }
 window.addEventListener('resize', resize);
 resize();
@@ -194,7 +202,7 @@ function simulate(dt) {
     if (v.driver && v.driver !== 'player') {
       if (v.role === 'cop' && live) driveCop(state, v, dt);
       else if (v.ai) {
-        if (v.role === 'leaving' && !v.ai.cruise) { const nv = makeTrafficCar(state, 0, 1); v.ai = nv.ai; }
+        if (v.role === 'leaving' && !v.ai.cruise) adoptTrafficAI(v);
         driveTraffic(state, v, dt);
       }
     }
@@ -276,6 +284,7 @@ function frame(now) {
   draw();
   endInputFrame(dt);
   state.consumedUse = false;
+  adaptResolution(dt);
   frames++; fpsT += dt;
   if (fpsT > 0.5) { fps = Math.round(frames / fpsT); frames = 0; fpsT = 0; }
   requestAnimationFrame(frame);

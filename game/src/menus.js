@@ -100,6 +100,7 @@ export function safehouseMenu(state) {
     id: 'safehouse', title: 'CASA BRISA', subtitle: state.properties.penthouse ? 'Safehouse · Penthouse perks active' : 'Safehouse', items: [
       { label: 'Save Game', sub: state.mission ? 'Not during a mission' : 'Writes to this browser\'s storage', disabled: !!state.mission, run: () => { if (state.properties.penthouse) { state.player.health = state.player.maxHealth; state.player.armor = state.player.maxArmor; } api.save(); closeMenu(state); } },
       { label: 'Rest', sub: 'Heal and skip to morning / evening', disabled: !!state.mission || state.wanted.level > 0, run: () => { restAtSafehouse(state); closeMenu(state); } },
+      { label: 'Weapon Locker', sub: 'Buy guns, ammo and armor', run: () => openMenu(state, shopMenu(state)) },
       { label: 'Switch Radio Preset', right: () => ['Ola', 'Retro', 'Cumbia', 'Off'][state.radio], run: () => { state.radio = (state.radio + 1) % 4; } },
       { label: 'Leave', run: () => closeMenu(state) },
     ],

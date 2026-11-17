@@ -44,6 +44,7 @@ export function applyScene(_state, name, api) {
     state.story.completed = MISSIONS.slice(0, 5).map((m) => m.id);
     startMission(state, 5);
     jumpToStep(state, 'loseWanted');
+    state.bigText = null;
     setWantedLevel(state, 4);
     for (const [dx, dy, a] of [[-120, 6, 0], [-230, -30, 0.1], [-60, -110, 1.3]]) {
       const c = createVehicle('police', x + dx, y + dy, a, { role: 'cop', driver: { role: 'cop', look: randomLook('cop') } });
@@ -54,10 +55,10 @@ export function applyScene(_state, name, api) {
     state.heli = { x: x + 120, y: y - 160, vx: 0, vy: 0, a: 0, rotor: 0, shootCd: 3, orbit: 0, leaving: false };
     state.camera.x = x + 100; state.camera.y = y;
   } else if (name === 'city') {
-    state.clock = 12.2 * SECONDS_PER_HOUR;
-    const seg = laneSegment(nodeId(5, 2), nodeId(5, 3));
-    putPlayerInCar(state, 'taxi', seg.sx, seg.sy + 40, Math.PI / 2, undefined, 140);
-    state.camera.x = seg.sx; state.camera.y = seg.sy + 120;
+    state.clock = 13.0 * SECONDS_PER_HOUR;
+    const seg = laneSegment(nodeId(11, 6), nodeId(11, 5));
+    putPlayerInCar(state, 'sports', seg.sx, seg.sy - 60, -Math.PI / 2, '#ff9f1c', 180);
+    state.camera.x = seg.sx; state.camera.y = seg.sy - 160;
   } else if (name === 'mission') {
     state.clock = 18.1 * SECONDS_PER_HOUR;
     state.story.next = 5;
@@ -66,6 +67,7 @@ export function applyScene(_state, name, api) {
     state.player.x = L.x - 110; state.player.y = L.y - 10;
     startMission(state, 5);
     jumpToStep(state, 'eliminate');
+    state.bigText = null;
     alertGang(state, 'yard');
     state.player.weapon = 'smg';
     state.player.a = Math.PI / 2;

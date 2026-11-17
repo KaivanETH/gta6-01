@@ -215,7 +215,7 @@ function genDocks(R, world, block, L, add) {
   block.ground = 'yard';
   const big = R.chance(0.6) || (block.bi === 9 && block.bj === 10);
   const roof = R.pick(['#b8432f', '#1f7a8c', '#dfe3e6', '#d97b29', '#5d7b93', '#3f8f6b']);
-  const label = block.bi === 8 && block.bj === 9 ? 'TIBURÓN' : String(block.bi * 10 + block.bj).padStart(2, '0');
+  const label = block.bi === 8 && block.bj === 9 ? 'TIBURÓN' : 'B-' + String((block.bi * 7 + block.bj * 3) % 40 + 1).padStart(2, '0');
   if (big) {
     add({
       x: L.x + 10, y: L.y + 10, w: L.w - 20, h: 120, ht: R.range(26, 40), district: 'muelles', style: 'warehouse',

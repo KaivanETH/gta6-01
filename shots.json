@@ -1,5 +1,6 @@
 [
-  { "name": "1-start.jpg", "query": "?shot=start&seed=1" },
-  { "name": "2-play.jpg", "query": "?shot=play&seed=1" },
-  { "name": "3-end.jpg", "query": "?shot=end&seed=1" }
+  { "name": "1-chase.jpg", "query": "?scene=chase", "note": "police chase at golden hour: 4 stars, helicopter, mission objective, minimap, speedometer" },
+  { "name": "2-city.jpg", "query": "?scene=city", "note": "driving a taxi through Centro Dorado at noon: traffic, pedestrians, park, HUD" },
+  { "name": "3-mission.jpg", "query": "?scene=mission", "note": "mission 6, Asalto al Muelle: shoot-out in the Los Muelles container yard" },
+  { "name": "4-title.jpg", "query": "", "note": "title screen over the live city" }
 ]

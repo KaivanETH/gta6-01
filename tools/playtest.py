@@ -215,7 +215,7 @@ def shots(page, out, only=None):
                 page.mouse.down()
             hold(page, keys, sec)
             page.mouse.up()
-        page.screenshot(path=f'{out}/{name}', type='jpeg', quality=88)
+        page.screenshot(path=f'{out}/{name}', type='jpeg', quality=84)
         print(name, info(page))
 
 

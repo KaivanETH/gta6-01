@@ -34,6 +34,7 @@ export function manageTraffic(state, dt) {
   for (const v of state.vehicles) {
     const d2 = dist2(v.x, v.y, cx, cy);
     const isTraffic = v.role === 'traffic' && v.driver && v.driver !== 'player';
+    if (['leaving', 'copParked', 'roadblock', 'cop'].includes(v.role) && v.driver !== 'player' && d2 > 2000 * 2000) continue;
     if (isTraffic && d2 > 1900 * 1900) continue;
     if (v.wrecked && d2 > 1600 * 1600 && !v.missionTag) continue;
     if (v.role === 'abandoned' && d2 > 2200 * 2200 && v.driver !== 'player') continue;
@@ -149,6 +150,14 @@ export function driveTraffic(state, v, dt) {
   const dv = target - vF;
   v.throttle = clamp(dv / 50, -1, 1);
   v.handbrake = target < 2 && Math.abs(vF) < 20;
+}
+
+// Give an AI driver (a cop that stopped chasing, a mission car afterwards) normal traffic behaviour.
+export function adoptTrafficAI(v) {
+  const n = nearestNode(v.x, v.y);
+  const ns = neighbors(n);
+  const prev = ns[rng.int(0, ns.length - 1)];
+  v.ai = { a: prev, b: n, next: chooseNextNode(rng, n, prev), cruise: rng.range(150, 210), stuck: 0, reverse: 0, panic: 0, honk: 0 };
 }
 
 // Make nearby drivers panic (after gunfire or a crash).

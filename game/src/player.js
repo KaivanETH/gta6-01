@@ -128,7 +128,7 @@ function updateEntering(state, dt) {
     const role = v.driver.role || 'civ';
     const bail = createPed(door.x, door.y, role === 'cop' ? 'cop' : 'civ', { look: v.driver.look });
     if (role === 'cop') { bail.state = 'chase'; reportCrime(state, 'hitCop', v.x, v.y); }
-    else { bail.state = 'flee'; bail.panic = 6; bail.fearX = v.x; bail.fearY = v.y; bail.vx = (door.x - v.x) * 6; bail.vy = (door.y - v.y) * 6; }
+    else { bail.state = 'down'; bail.downT = 0.7; bail.fearX = v.x; bail.fearY = v.y; bail.vx = (door.x - v.x) * 7; bail.vy = (door.y - v.y) * 7; bail.a = Math.atan2(door.y - v.y, door.x - v.x); }
     state.peds.push(bail);
     reportCrime(state, 'jack', v.x, v.y);
     toast(state, 'Carjacked: ' + v.spec.name, '#ffc93c', 2);
