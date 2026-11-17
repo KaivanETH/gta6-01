@@ -331,6 +331,14 @@ function genCoast(R, world) {
     world.beachPads.push({ x: sandX + 16, y: y - 21, w: 70, h: 110 });
     for (let k = 0; k < 3; k++) world.parking.push({ x: sandX + 50, y: y + k * 34, a: 0, lot: true, prefer: k === 1 ? 'sports' : undefined });
   }
+  // container terminal on the coast south of the beach
+  world.eastDock = { x: sandX, y: nodeY(8) - ROAD_HALF, w: COAST_X - sandX + 20, h: HARBOR_Y - nodeY(8) + ROAD_HALF };
+  const CT = ['#d64545', '#2f7fc1', '#e8a33d', '#3aa36b', '#8e44ad', '#e86f3d'];
+  for (let r = 0; r < 5; r++) for (let c = 0; c < 2; c++) {
+    const col = CT[(r * 2 + c) % CT.length];
+    const box = { x: sandX + 70 + c * 100, y: nodeY(8) + 40 + r * 120, w: 26, h: 70, ht: c ? 26 : 14, district: 'muelles', style: 'container', base: col, roof: col, roofType: 'container', windows: '#000' };
+    box.id = world.buildings.length; world.buildings.push(box); world.solids.push(box);
+  }
   // southern shore sand strip west of the harbor
   world.southShore = { x: 0, y: nodeY(NODES_Y - 1) + ROAD_HALF + SIDEWALK, w: HARBOR_X, h: HARBOR_Y - (nodeY(NODES_Y - 1) + ROAD_HALF + SIDEWALK) };
 }

@@ -240,7 +240,7 @@ function updateUiTimers(dt) {
   }
   state.streetTimer = (state.streetTimer || 0) - dt;
   if (state.streetTimer <= 0) { state.streetTimer = 0.4; state.streetName = streetNameAt(me.x, me.y); }
-  state.markers = state.mode === 'play' ? missionMarkers(state).concat(activityMarkers(state), economyMarkers(state)) : [];
+  state.markers = state.mode === 'play' || state.mode === 'menu' ? missionMarkers(state).concat(activityMarkers(state), economyMarkers(state)) : [];
   if (state.credits) state.credits.t += dt;
   if (state.mode === 'intro') {
     state.intro.t += dt;

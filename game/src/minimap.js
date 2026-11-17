@@ -23,6 +23,7 @@ export function buildMapCanvas(world) {
   g.fillRect(world.beach.x, world.beach.y, world.beach.w, world.beach.h);
   g.fillRect(world.southShore.x, world.southShore.y, world.southShore.w, world.southShore.h);
   g.fillStyle = '#b8b3a8'; g.fillRect(world.quay.x, world.quay.y, world.quay.w, world.quay.h);
+  if (world.eastDock) g.fillRect(world.eastDock.x, world.eastDock.y, world.eastDock.w, world.eastDock.h);
   g.fillStyle = '#a07a52';
   for (const p of world.piers) g.fillRect(p.x, p.y, p.w, p.h);
   for (const b of world.blocks) { g.fillStyle = DISTRICT_TINT[b.district]; g.fillRect(b.rect.x, b.rect.y, b.rect.w, b.rect.h); }

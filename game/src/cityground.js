@@ -35,6 +35,11 @@ export function drawGround(ctx, state, b, time) {
     ctx.fillRect(beach.x, Math.max(b.y0, beach.y), beach.w + 30, Math.min(b.y1, HARBOR_Y) - Math.max(b.y0, beach.y));
     drawShore(ctx, b, time);
   }
+  if (w.eastDock && visible(w.eastDock, b)) {
+    const e = w.eastDock;
+    ctx.fillStyle = pattern(ctx, 'yard'); ctx.fillRect(e.x, e.y, e.w, e.h);
+    ctx.strokeStyle = 'rgba(255,220,0,0.55)'; ctx.lineWidth = 2; ctx.strokeRect(e.x + 30, e.y + 20, e.w - 70, e.h - 40);
+  }
   if (visible(w.southShore, b)) {
     ctx.fillStyle = pattern(ctx, 'sand');
     const s = w.southShore;
