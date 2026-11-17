@@ -1,16 +1,16 @@
 // Player controller: walking/sprinting on foot, mouse aim with keyboard aim-assist, attacking,
 // entering and jacking cars (the driver bails), driving controls, drive-by shooting and exiting.
 import { WEAPONS } from './config.js';
-import { clamp, dist2, angleTo, rng } from './mathutil.js';
-import { isDown, wasPressed, anyDown, anyPressed, moveAxes, getMouse } from './input.js';
+import { reportCrime } from './police.js';
+import { doorPoint, forwardSpeed } from './vehicles.js';
 import { createPed } from './peds.js';
 import { movePed } from './peds.js';
-import { doorPoint, forwardSpeed } from './vehicles.js';
-import { solidAt } from './world.js';
 import { playerFire, cycleWeapon, selectWeaponSlot } from './combat.js';
-import { reportCrime } from './police.js';
-import { toast } from './state.js';
+import { solidAt } from './world.js';
 import { sfx } from './audio.js';
+import { toast } from './state.js';
+import { clamp, dist2, angleTo, rng } from './mathutil.js';
+import { isDown, wasPressed, anyDown, anyPressed, moveAxes, getMouse } from './input.js';
 import { screenToWorld } from './camera.js';
 
 const WALK = 92, SPRINT = 165;

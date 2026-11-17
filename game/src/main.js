@@ -1,30 +1,31 @@
 // Entry point and game loop: builds the city, owns the mode state machine (title → intro →
 // play ⇄ menus), runs the fixed-step simulation of every system, and draws each frame.
 import { WEAPONS, BUST_CASH_LOSS, WASTED_CASH_LOSS, DISTRICTS, SECONDS_PER_HOUR } from './config.js';
-import { generateWorld, districtAt } from './world.js';
-import { createGameState, toast, bigMessage } from './state.js';
-import { initInput, wasPressed, endInputFrame } from './input.js';
-import { updateCamera, startCinematic, endCinematic } from './camera.js';
-import { renderWorld } from './render.js';
-import { drawHUD } from './hud.js';
-import { buildMapCanvas } from './minimap.js';
+import { INTRO_CRAWL } from './story.js';
+import { updateMission, missionMarkers, failMission } from './missions.js';
+import { updatePolice, driveCop, copFootAI, clearPolice } from './police.js';
+import { manageTraffic, driveTraffic, spawnParkedCars, makeTrafficCar, adoptTrafficAI } from './traffic.js';
 import { stepVehicle, collideVehicles } from './vehicles.js';
 import { updatePeds, managePopulation } from './peds.js';
-import { manageTraffic, driveTraffic, spawnParkedCars, makeTrafficCar, adoptTrafficAI } from './traffic.js';
-import { updatePolice, driveCop, copFootAI, clearPolice } from './police.js';
 import { gangAI, processExplosions } from './combat.js';
 import { updatePlayer, exitVehicle } from './player.js';
-import { updateFx } from './fx.js';
-import { updateMission, missionMarkers, failMission } from './missions.js';
-import { updatePickups, placeGoldenShells } from './pickups.js';
 import { updateEconomy, economyMarkers, interactableAt, applyPropertyPerks } from './economy.js';
+import { updateActivities, activityMarkers } from './activities.js';
+import { updatePickups, placeGoldenShells } from './pickups.js';
+import { saveGame, loadGame, loadOptions } from './save.js';
+import { drawHUD } from './hud.js';
+import { buildMapCanvas } from './minimap.js';
 import { initMenus, openMenu, titleMenu, pauseMenu, updateMenu, drawMenu, topMenu, shopMenu, safehouseMenu, propertyMenu, drawIntro, drawCredits } from './menus.js';
+import { generateWorld, districtAt } from './world.js';
+import { streetNameAt, randomEdgeNear } from './roads.js';
 import { initAudio, setVolume, setMusicEnabled, updateEngineSound, updateSiren, updateScreech } from './audio.js';
 import { setMusic, musicFor, RADIO_STATIONS } from './music.js';
-import { saveGame, loadGame, loadOptions } from './save.js';
-import { streetNameAt, randomEdgeNear } from './roads.js';
+import { createGameState, toast, bigMessage } from './state.js';
 import { rng, reseed, dist2 } from './mathutil.js';
-import { INTRO_CRAWL } from './story.js';
+import { initInput, wasPressed, endInputFrame } from './input.js';
+import { updateFx } from './fx.js';
+import { updateCamera, startCinematic, endCinematic } from './camera.js';
+import { renderWorld } from './render.js';
 import { applyScene } from './scenes.js';
 
 const canvas = document.getElementById('game');
@@ -217,6 +218,7 @@ function simulate(dt) {
     updateMission(state, dt);
     updatePickups(state, dt);
     updateEconomy(state, dt);
+    updateActivities(state, dt);
   } else processExplosions(state);
   manageTraffic(state, dt);
   managePopulation(state, dt);
@@ -238,7 +240,7 @@ function updateUiTimers(dt) {
   }
   state.streetTimer = (state.streetTimer || 0) - dt;
   if (state.streetTimer <= 0) { state.streetTimer = 0.4; state.streetName = streetNameAt(me.x, me.y); }
-  state.markers = state.mode === 'play' ? missionMarkers(state).concat(economyMarkers(state)) : [];
+  state.markers = state.mode === 'play' ? missionMarkers(state).concat(activityMarkers(state), economyMarkers(state)) : [];
   if (state.credits) state.credits.t += dt;
   if (state.mode === 'intro') {
     state.intro.t += dt;

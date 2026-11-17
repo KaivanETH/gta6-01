@@ -1,13 +1,13 @@
 // Pedestrians: creation and looks, sidewalk-ring walking with street crossings, beach/park
 // wanderers, panic and fleeing, getting hit by cars, knock-downs, deaths and population upkeep.
 import { NODES_X, NODES_Y, ROAD_HALF, SIDEWALK, nodeX, nodeY, BLOCK, MARGIN, CRIME_HEAT } from './config.js';
-import { rng, clamp, dist2 } from './mathutil.js';
-import { solidAt } from './world.js';
-import { blood, shake } from './fx.js';
-import { sfx, volAt } from './audio.js';
 import { reportCrime } from './police.js';
 import { dropCash } from './pickups.js';
+import { solidAt } from './world.js';
+import { sfx, volAt } from './audio.js';
 import { gameHour } from './state.js';
+import { rng, clamp, dist2 } from './mathutil.js';
+import { blood, shake } from './fx.js';
 
 let nextPedId = 1;
 const SKIN = ['#f1c27d', '#e0ac69', '#c68642', '#8d5524', '#ffdbac', '#a0673b'];

@@ -1,7 +1,7 @@
 // Camera: smooth follow with velocity lookahead, speed-based zoom-out, screen shake,
 // cinematic pans for the intro, and screen↔world conversions.
-import { clamp, lerp, rng } from './mathutil.js';
 import { WORLD_W, WORLD_H } from './config.js';
+import { clamp, lerp, rng } from './mathutil.js';
 
 export function updateCamera(state, dt, view) {
   const cam = state.camera;

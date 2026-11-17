@@ -4,8 +4,8 @@
 import {
   NODES_X, NODES_Y, ROAD_HALF, SIDEWALK, nodeX, nodeY, COAST_X, HARBOR_Y, WORLD_W, WORLD_H, PALETTE,
 } from './config.js';
-import { pattern } from './textures.js';
 import { lightState, nodeId } from './roads.js';
+import { pattern } from './textures.js';
 
 const GROUND_PATTERN = { plaza: 'plaza', resort: 'resort', yard: 'yard', lawn: 'lawn', tiles: 'pavers', park: 'park' };
 

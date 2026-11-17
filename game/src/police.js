@@ -4,14 +4,14 @@
 import {
   WANTED_THRESHOLDS, COPS_PER_LEVEL, COP_SIGHT, EVADE_BASE, EVADE_PER_STAR, CRIME_HEAT, ROAD_HALF,
 } from './config.js';
-import { rng, clamp, wrapAngle, dist2, angleTo } from './mathutil.js';
-import { lineOfSight } from './world.js';
-import { randomEdgeNear, laneSegment, nearestNode, nextNodeToward, nodePos, neighbors } from './roads.js';
 import { createVehicle, forwardSpeed, doorPoint } from './vehicles.js';
 import { createPed, randomLook } from './peds.js';
 import { npcShoot } from './combat.js';
-import { toast } from './state.js';
+import { lineOfSight } from './world.js';
+import { randomEdgeNear, laneSegment, nearestNode, nextNodeToward, nodePos, neighbors } from './roads.js';
 import { sfx } from './audio.js';
+import { toast } from './state.js';
+import { rng, clamp, wrapAngle, dist2, angleTo } from './mathutil.js';
 
 export function playerPos(state) {
   const pl = state.player;
@@ -91,7 +91,7 @@ function updateHeli(state, dt, pp) {
   if (h.leaving) { tx = h.x - 2000; ty = h.y - 2000; }
   else {
     h.orbit += dt * 0.5;
-    tx = pp.x + Math.cos(h.orbit) * 160 + pp.vx * 0.5; ty = pp.y + Math.sin(h.orbit) * 120 + pp.vy * 0.5;
+    tx = pp.x + Math.cos(h.orbit) * 250 + pp.vx * 0.25; ty = pp.y + Math.sin(h.orbit) * 190 + pp.vy * 0.25;
   }
   const dx = tx - h.x, dy = ty - h.y, d = Math.hypot(dx, dy) || 1;
   const sp = Math.min(520, d * 1.6);

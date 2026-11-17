@@ -2,15 +2,15 @@
 // melee swings, NPC gunfire, player damage/armor, explosions with chain reactions, and
 // hostile gang AI that patrols, notices the player and fights back.
 import { WEAPONS, WEAPON_ORDER } from './config.js';
-import { rng, rayCircle, dist2, angleTo, clamp } from './mathutil.js';
-import { solidsNear, isWater } from './world.js';
-import { hurtPed, scarePeds } from './peds.js';
-import { damageVehicle } from './vehicles.js';
 import { reportCrime } from './police.js';
 import { panicTraffic } from './traffic.js';
-import { sparks, muzzleFlash, tracer, blood, shake, splash } from './fx.js';
+import { damageVehicle } from './vehicles.js';
+import { hurtPed, scarePeds } from './peds.js';
+import { solidsNear, isWater } from './world.js';
 import { sfx, volAt } from './audio.js';
 import { toast } from './state.js';
+import { rng, rayCircle, dist2, angleTo, clamp } from './mathutil.js';
+import { sparks, muzzleFlash, tracer, blood, shake, splash } from './fx.js';
 
 // Distance along a ray until it meets a building wall (or maxD).
 function wallDistance(world, ox, oy, dx, dy, maxD) {

@@ -2,12 +2,12 @@
 // stopping for red lights, braking for cars/peds/the player, honking, panic driving and
 // spawning/despawning cars on lanes around the player. Also seeds the parked cars.
 import { TRAFFIC_MIX } from './config.js';
-import { rng, clamp, wrapAngle, dist2, segmentDistance } from './mathutil.js';
-import { laneSegment, chooseNextNode, randomEdgeNear, lightState, nodePos, nearestNode, neighbors } from './roads.js';
 import { createVehicle, forwardSpeed } from './vehicles.js';
 import { randomLook } from './peds.js';
+import { laneSegment, chooseNextNode, randomEdgeNear, lightState, nodePos, nearestNode, neighbors } from './roads.js';
 import { sfx, volAt } from './audio.js';
 import { gameHour } from './state.js';
+import { rng, clamp, wrapAngle, dist2, segmentDistance } from './mathutil.js';
 
 export function spawnParkedCars(state) {
   for (const p of state.world.parking) {

@@ -1,13 +1,13 @@
 // Frame composer: draws the world in layers — ground, shadows, skid marks, pickups, markers,
 // pedestrians, vehicles, particles, the leaning buildings/props, helicopter, then lighting.
+import { drawPickups } from './pickups.js';
+import { drawGroundFx, drawParticles } from './fx.js';
 import { applyCamera, visibleBounds } from './camera.js';
+import { currentLighting, drawLighting } from './lighting.js';
 import { drawGround } from './cityground.js';
 import { drawBuildingShadows, drawElevated } from './buildings.js';
 import { drawVehicle, drawPed, drawHeli, drawHeliShadow } from './sprites.js';
-import { drawGroundFx, drawParticles } from './fx.js';
-import { drawPickups } from './pickups.js';
 import { drawMarkers } from './markers.js';
-import { currentLighting, drawLighting } from './lighting.js';
 
 export function renderWorld(ctx, state, view, time) {
   ctx.setTransform(1, 0, 0, 1, 0, 0);

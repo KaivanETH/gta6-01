@@ -2,12 +2,12 @@
 // testing): each one starts a real game and stages a moment — a police chase, a downtown
 // drive, a mission in progress — then the normal simulation takes over.
 import { SECONDS_PER_HOUR, nodeX, nodeY } from './config.js';
-import { createVehicle } from './vehicles.js';
 import { startMission, jumpToStep, MISSIONS } from './missions.js';
 import { setWantedLevel } from './police.js';
-import { laneSegment, nodeId } from './roads.js';
+import { createVehicle } from './vehicles.js';
 import { randomLook } from './peds.js';
 import { alertGang } from './combat.js';
+import { laneSegment, nodeId } from './roads.js';
 
 function S() { return window.__bd.state; }
 
@@ -52,7 +52,12 @@ export function applyScene(_state, name, api) {
       c.ai = { node: nodeId(8, 4), prev: nodeId(6, 4), stuck: 0, reverse: 0, shootCd: 1 };
       state.vehicles.push(c);
     }
-    state.heli = { x: x + 120, y: y - 160, vx: 0, vy: 0, a: 0, rotor: 0, shootCd: 3, orbit: 0, leaving: false };
+    state.heli = { x: x + 260, y: y - 230, vx: 240, vy: 0, a: 0, rotor: 0, shootCd: 3, orbit: -1.25, leaving: false };
+    // keep the escape lane open and leave a burning cruiser in the oncoming lane
+    state.vehicles = state.vehicles.filter((o) => !(o.role === 'traffic' && Math.abs(o.y - y) < 40 && o.x > x - 40 && o.x < x + 1300));
+    const wreck = createVehicle('police', x + 560, y - 48, 2.7, { role: 'copParked' });
+    wreck.health = 0; wreck.onFire = true; wreck.fireT = 60; wreck.sleeping = false;
+    state.vehicles.push(wreck);
     state.camera.x = x + 100; state.camera.y = y;
   } else if (name === 'city') {
     state.clock = 13.0 * SECONDS_PER_HOUR;
@@ -66,6 +71,7 @@ export function applyScene(_state, name, api) {
     const L = state.world.landmarks.dockyard;
     state.player.x = L.x - 110; state.player.y = L.y - 10;
     startMission(state, 5);
+    state.player.armor = 100;
     jumpToStep(state, 'eliminate');
     state.bigText = null;
     alertGang(state, 'yard');

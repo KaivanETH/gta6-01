@@ -2,15 +2,16 @@
 // ticker with timers and progress bars, speedometer + radio, district/street names, prompts,
 // toasts, dialogue subtitles, big banners, off-screen objective arrow and WASTED/BUSTED screens.
 import { WEAPONS, DISTRICTS } from './config.js';
-import { formatMoney } from './mathutil.js';
-import { gameHour } from './state.js';
-import { drawMinimap } from './minimap.js';
-import { rrect } from './sprites.js';
-import { playerSpeedKmh, nearestEnterable } from './player.js';
-import { worldToScreen } from './camera.js';
 import { speakerOf } from './missions.js';
+import { playerSpeedKmh, nearestEnterable } from './player.js';
 import { interactableAt } from './economy.js';
+import { activityPanel } from './activities.js';
+import { drawMinimap } from './minimap.js';
 import { RADIO_STATIONS } from './music.js';
+import { gameHour } from './state.js';
+import { formatMoney } from './mathutil.js';
+import { worldToScreen } from './camera.js';
+import { rrect } from './sprites.js';
 
 const FONT = '"Trebuchet MS", "Segoe UI", Arial, sans-serif';
 
@@ -43,10 +44,10 @@ export function drawHUD(ctx, state, view, time) {
   ctx.setTransform(1, 0, 0, 1, 0, 0);
 
   // damage vignette
-  const hurt = Math.max(pl.hurt * 3, pl.health < 30 ? 0.35 + Math.sin(time * 6) * 0.15 : 0);
+  const hurt = Math.max(pl.hurt * 1.6, pl.health < 30 ? 0.3 + Math.sin(time * 6) * 0.12 : 0);
   if (hurt > 0.01) {
-    const g = ctx.createRadialGradient(W / 2, H / 2, H * 0.35, W / 2, H / 2, H * 0.85);
-    g.addColorStop(0, 'rgba(180,0,20,0)'); g.addColorStop(1, `rgba(180,0,20,${Math.min(0.6, hurt)})`);
+    const g = ctx.createRadialGradient(W / 2, H / 2, H * 0.55, W / 2, H / 2, W * 0.62);
+    g.addColorStop(0, 'rgba(180,0,20,0)'); g.addColorStop(1, `rgba(180,0,20,${Math.min(0.45, hurt)})`);
     ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
   }
 
@@ -93,6 +94,15 @@ function drawStatusPanel(ctx, state, W, time) {
 function drawMissionPanel(ctx, state, time) {
   const m = state.mission;
   let y = 22;
+  const job = !m && activityPanel(state);
+  if (job) {
+    ctx.fillStyle = 'rgba(10,8,30,0.62)'; rrect(ctx, 16, 14, 430, 70, 10); ctx.fill();
+    ctx.fillStyle = '#ffc93c'; ctx.fillRect(16, 14, 5, 70);
+    text(ctx, job.title, 32, 32, 15, '#ffc93c', 'left', 'bold', 0);
+    text(ctx, job.objective, 32, 58, 16, '#ffffff', 'left', 'bold', 2);
+    if (job.timer != null) text(ctx, `${Math.floor(job.timer / 60)}:${String(Math.floor(job.timer % 60)).padStart(2, '0')}`, 432, 32, 18, job.timer < 10 ? '#ff5a5a' : '#ffffff', 'right', 'bold', 0);
+    return;
+  }
   if (!m) {
     const done = state.story.completed.length;
     text(ctx, `BAHÍA DORADA`, 24, y + 4, 16, '#ffc93c', 'left');

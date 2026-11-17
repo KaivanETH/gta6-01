@@ -1,11 +1,11 @@
 // Progression and economy: the gun shop, the Casa Brisa safehouse (save/rest), the respray
 // garage, and three purchasable properties with perks (penthouse, garage share, nightclub).
 import { WEAPONS, SECONDS_PER_HOUR } from './config.js';
-import { dist2, formatMoney } from './mathutil.js';
-import { toast, bigMessage, gameHour } from './state.js';
-import { sfx } from './audio.js';
-import { clearPolice } from './police.js';
 import { VEHICLE_TYPES } from './config.js';
+import { clearPolice } from './police.js';
+import { sfx } from './audio.js';
+import { toast, bigMessage, gameHour } from './state.js';
+import { dist2, formatMoney } from './mathutil.js';
 import { rng } from './mathutil.js';
 
 export const PROPERTIES = {

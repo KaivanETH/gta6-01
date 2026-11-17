@@ -1,9 +1,9 @@
 // World pickups: dropped cash, ammo, health and armor packs, and the 16 hidden Golden Shell
 // collectibles scattered around Bahía Dorada.
 import { WEAPONS } from './config.js';
-import { makeRng, dist2, formatMoney } from './mathutil.js';
-import { toast } from './state.js';
 import { sfx } from './audio.js';
+import { toast } from './state.js';
+import { makeRng, dist2, formatMoney } from './mathutil.js';
 
 export function dropCash(state, x, y, amount) {
   state.pickups.push({ type: 'cash', amount, x: x + 6, y: y + 4, life: 30 });

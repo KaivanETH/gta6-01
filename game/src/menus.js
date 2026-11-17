@@ -2,15 +2,15 @@
 // pause menu (map, mission log, save/load, options, quit), gun shop, safehouse, property
 // purchase, the opening cinematic crawl and the ending credits. Keyboard and mouse driven.
 import { GAME_TITLE, GAME_SUBTITLE } from './config.js';
-import { wasPressed, getMouse } from './input.js';
-import { rrect } from './sprites.js';
-import { formatMoney } from './mathutil.js';
 import { MISSIONS } from './story.js';
+import { INTRO_CRAWL } from './story.js';
 import { shopItems, buyProperty, PROPERTIES, restAtSafehouse } from './economy.js';
+import { hasSave, saveSummary, saveOptions } from './save.js';
 import { drawFullMap } from './minimap.js';
 import { sfx, setVolume, setMusicEnabled } from './audio.js';
-import { hasSave, saveSummary, saveOptions } from './save.js';
-import { INTRO_CRAWL } from './story.js';
+import { formatMoney } from './mathutil.js';
+import { wasPressed, getMouse } from './input.js';
+import { rrect } from './sprites.js';
 
 const FONT = '"Trebuchet MS", "Segoe UI", Arial, sans-serif';
 let api = null;

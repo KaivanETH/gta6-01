@@ -1,10 +1,10 @@
 // Vehicle model: creation, arcade top-down physics with grip/drift, building and water collisions,
 // car-to-car impacts, damage, engine fire and explosions.
 import { VEHICLE_TYPES } from './config.js';
-import { rng, clamp, approach } from './mathutil.js';
 import { solidAt } from './world.js';
-import { sparks, smoke, fire, skid, tireSmoke, explosionFx, shake, debris } from './fx.js';
 import { sfx, volAt } from './audio.js';
+import { rng, clamp, approach } from './mathutil.js';
+import { sparks, smoke, fire, skid, tireSmoke, explosionFx, shake, debris } from './fx.js';
 
 let nextId = 1;
 
