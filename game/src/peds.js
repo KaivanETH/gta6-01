@@ -7,6 +7,7 @@ import { blood, shake } from './fx.js';
 import { sfx, volAt } from './audio.js';
 import { reportCrime } from './police.js';
 import { dropCash } from './pickups.js';
+import { gameHour } from './state.js';
 
 let nextPedId = 1;
 const SKIN = ['#f1c27d', '#e0ac69', '#c68642', '#8d5524', '#ffdbac', '#a0673b'];
@@ -265,12 +266,12 @@ export function managePopulation(state, dt) {
   const far2 = 1500 * 1500;
   state.peds = state.peds.filter((p) => p.persistent || dist2(p.x, p.y, cx, cy) < far2 && !(p.state === 'dead' && p.deadT > 45));
   const civs = state.peds.filter((p) => p.role === 'civ').length;
-  const hour = (state.clock / 20) % 24;
-  const target = hour > 1 && hour < 6 ? 34 : 64;
+  const hour = gameHour(state);
+  const target = hour > 1 && hour < 6 ? 44 : 92;
   state.pedCd -= dt;
   if (civs < target && state.pedCd <= 0) {
     state.pedCd = 0.05;
-    spawnCivNear(state, cx, cy, state.mode === 'play' ? 520 : 0, 1250);
+    spawnCivNear(state, cx, cy, state.mode === 'play' ? 480 : 0, 1250);
   }
 }
 

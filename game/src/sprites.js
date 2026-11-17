@@ -174,6 +174,7 @@ export function drawHeliShadow(ctx, h) {
 export function drawHeli(ctx, h, time) {
   ctx.save();
   ctx.translate(h.x, h.y);
+  ctx.scale(1.45, 1.45);
   ctx.rotate(h.a);
   ctx.fillStyle = '#e9eef5';
   ctx.fillRect(-44, -2.5, 30, 5);

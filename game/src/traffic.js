@@ -7,6 +7,7 @@ import { laneSegment, chooseNextNode, randomEdgeNear, lightState, nodePos, neare
 import { createVehicle, forwardSpeed } from './vehicles.js';
 import { randomLook } from './peds.js';
 import { sfx, volAt } from './audio.js';
+import { gameHour } from './state.js';
 
 export function spawnParkedCars(state) {
   for (const p of state.world.parking) {
@@ -41,11 +42,11 @@ export function manageTraffic(state, dt) {
   }
   state.vehicles = keep;
   state.trafficCd -= dt;
-  const hour = (state.clock / 20) % 24;
-  const target = hour > 1 && hour < 5 ? 16 : 30;
+  const hour = gameHour(state);
+  const target = hour > 1 && hour < 5 ? 22 : 44;
   if (traffic < target && state.trafficCd <= 0) {
-    state.trafficCd = 0.12;
-    const minD = state.mode === 'play' ? 760 : 200;
+    state.trafficCd = 0.08;
+    const minD = state.mode === 'play' ? 640 : 200;
     const e = randomEdgeNear(rng, cx, cy, minD, 1500);
     if (e) {
       const v = makeTrafficCar(state, e.a, e.b);

@@ -190,6 +190,88 @@ def long_play(page, out):
     print('continued', info(page))
 
 
+SHOTS = [
+    # (file, scene, scripted input [(keys, seconds)], warm-up seconds)
+    ('1-chase.jpg', 'chase', [(['KeyW'], 1.9)], 0.8),
+    ('2-city.jpg', 'city', [(['KeyW'], 1.2)], 1.5),
+    ('3-mission.jpg', 'mission', [(['KeyS'], 0.5), ([], 0.4)], 1.2),
+    ('4-title.jpg', 'title', [], 3.0),
+]
+
+
+def shots(page, out, only=None):
+    for name, scene, script, warm in SHOTS:
+        if only and scene not in only:
+            continue
+        page.goto(URL + ('?scene=' + scene if scene != 'title' else ''))
+        page.wait_for_timeout(int(warm * 1000))
+        for keys, sec in script:
+            if scene == 'mission':
+                aim = page.evaluate("""() => { const s = window.__bd.state, v = window.__bd.view, c = s.camera, pl = s.player;
+                  const g = s.peds.filter(p => (p.role === 'gang' || p.role === 'boss') && p.state !== 'dead')
+                    .sort((a, b) => ((a.x-pl.x)**2+(a.y-pl.y)**2) - ((b.x-pl.x)**2+(b.y-pl.y)**2))[0];
+                  return g ? [(g.x - c.x) * c.zoom + v.w / 2, (g.y - c.y) * c.zoom + v.h / 2] : [700, 500]; }""")
+                page.mouse.move(aim[0], aim[1])
+                page.mouse.down()
+            hold(page, keys, sec)
+            page.mouse.up()
+        page.screenshot(path=f'{out}/{name}', type='jpeg', quality=88)
+        print(name, info(page))
+
+
+HELPER = """(kind) => {
+  const s = window.__bd.state, m = s.mission, pl = s.player;
+  const me = pl.vehicle || pl;
+  const lm = (k) => s.world.landmarks[k];
+  if (!m) return 'no mission';
+  const st = m.def.steps[m.step];
+  const tp = (x, y) => { me.x = x; me.y = y; me.vx = me.vy = 0; if (pl.vehicle) { pl.x = x; pl.y = y; } };
+  switch (st.type) {
+    case 'goto': { const p = typeof st.at === 'string' && st.at[0] !== '@' ? lm(st.at) : null; if (p) tp(p.x, p.y); break; }
+    case 'enterVehicle': { const v = m.tags[st.tag]; if (pl.vehicle) { pl.vehicle.driver = null; pl.vehicle = null; } pl.x = v.x + 24; pl.y = v.y; break; }
+    case 'deliver': { const v = m.tags[st.tag]; const p = lm(st.at); if (pl.vehicle === v) { v.x = p.x; v.y = p.y; v.vx = v.vy = 0; } break; }
+    case 'chase': { const v = m.tags[st.tag]; v.health = v.maxHealth * 0.2; break; }
+    case 'pickupItem': { if (m.item) tp(m.item.x, m.item.y); break; }
+    case 'loseWanted': { s.wanted.unseen = 999; break; }
+    case 'stakeout': { m.progress = st.time; tp(m.zone.x, m.zone.y); break; }
+    case 'follow': { const v = m.tags[st.tag]; v.x = m.dest.x; v.y = m.dest.y - 80; tp(v.x - 200, v.y); break; }
+    case 'eliminate': { for (const g of m.enemies) { g.health = 0; g.state = 'dead'; g.deadT = 0; } break; }
+  }
+  return st.type + ' | ' + m.objective;
+}"""
+
+
+def missions(page, out):
+    page.goto(URL)
+    page.wait_for_timeout(1500)
+    tap(page, 'Enter', 1.0)
+    tap(page, 'Enter', 1.0)
+    page.evaluate("() => { const s = window.__bd.state; s.godMode = true; }")
+    for idx in range(7):
+        if info(page)['next'] >= 7:
+            break
+        page.evaluate("() => { const s = window.__bd.state; s.wanted.level = 0; s.wanted.heat = 0; const g = s.world.landmarks[['cafe','cafe','cafe','garage','garage','cafe','cafe'][s.story.next]]; const me = s.player.vehicle || s.player; me.x = g.x; me.y = g.y; me.vx = me.vy = 0; }")
+        page.wait_for_timeout(700)
+        print('mission', idx, info(page)['mission'])
+        for _ in range(40):
+            st = page.evaluate("() => { const m = window.__bd.state.mission; return m ? m.def.steps[m.step].type : null; }")
+            if st is None:
+                break
+            if st == 'dialog':
+                tap(page, 'Enter', 0.25)
+                continue
+            r = page.evaluate(HELPER, 'x')
+            print('   ', r)
+            if st == 'enterVehicle':
+                page.wait_for_timeout(200)
+                tap(page, 'KeyE', 1.2)
+            page.wait_for_timeout(1300)
+        print('  -> next', info(page)['next'], 'cash', info(page)['cash'])
+        page.screenshot(path=f'{out}/mission-{idx}.png')
+    page.wait_for_timeout(2500)
+    page.screenshot(path=f'{out}/mission-credits.png')
+
+
 def main():
     mode = sys.argv[1] if len(sys.argv) > 1 else 'smoke'
     out = sys.argv[2] if len(sys.argv) > 2 else '/tmp/bd'
@@ -201,6 +283,10 @@ def main():
             smoke(page, out)
         elif mode == 'long':
             long_play(page, out)
+        elif mode == 'missions':
+            missions(page, out)
+        elif mode == 'shots':
+            shots(page, out, sys.argv[3].split(',') if len(sys.argv) > 3 else None)
         browser.close()
     print(json.dumps({'errors': errors[:30], 'count': len(errors)}, indent=1))
     sys.exit(1 if errors else 0)

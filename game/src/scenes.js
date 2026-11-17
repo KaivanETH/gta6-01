@@ -7,6 +7,7 @@ import { startMission, jumpToStep, MISSIONS } from './missions.js';
 import { setWantedLevel } from './police.js';
 import { laneSegment, nodeId } from './roads.js';
 import { randomLook } from './peds.js';
+import { alertGang } from './combat.js';
 
 function S() { return window.__bd.state; }
 
@@ -58,14 +59,16 @@ export function applyScene(_state, name, api) {
     putPlayerInCar(state, 'taxi', seg.sx, seg.sy + 40, Math.PI / 2, undefined, 140);
     state.camera.x = seg.sx; state.camera.y = seg.sy + 120;
   } else if (name === 'mission') {
-    state.clock = 19.4 * SECONDS_PER_HOUR;
+    state.clock = 18.1 * SECONDS_PER_HOUR;
     state.story.next = 5;
     state.story.completed = MISSIONS.slice(0, 5).map((m) => m.id);
-    const L = state.world.landmarks.pierEnd;
-    state.player.x = L.x - 40; state.player.y = L.y - 300;
+    const L = state.world.landmarks.dockyard;
+    state.player.x = L.x - 110; state.player.y = L.y - 10;
     startMission(state, 5);
     jumpToStep(state, 'eliminate');
+    alertGang(state, 'yard');
     state.player.weapon = 'smg';
+    state.player.a = Math.PI / 2;
     state.camera.x = state.player.x; state.camera.y = state.player.y;
   }
 }

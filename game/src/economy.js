@@ -1,6 +1,6 @@
 // Progression and economy: the gun shop, the Casa Brisa safehouse (save/rest), the respray
 // garage, and three purchasable properties with perks (penthouse, garage share, nightclub).
-import { WEAPONS } from './config.js';
+import { WEAPONS, SECONDS_PER_HOUR } from './config.js';
 import { dist2, formatMoney } from './mathutil.js';
 import { toast, bigMessage, gameHour } from './state.js';
 import { sfx } from './audio.js';
@@ -83,14 +83,14 @@ export function restAtSafehouse(state) {
   if (state.properties.penthouse) pl.armor = Math.min(pl.maxArmor, pl.armor + 50);
   const h = gameHour(state);
   const target = h >= 6 && h < 17 ? 19 : 9;
-  const add = ((target - h + 24) % 24) * 20;
+  const add = ((target - h + 24) % 24) * SECONDS_PER_HOUR;
   state.clock += add;
   toast(state, `You rested until ${target}:00`, '#7ddc6a', 2.5);
 }
 
 export function updateEconomy(state, dt) {
   // nightclub income
-  const hour = Math.floor(state.clock / 20);
+  const hour = Math.floor(state.clock / SECONDS_PER_HOUR);
   if (hour !== state.clubIncomeHour) {
     state.clubIncomeHour = hour;
     if (state.properties.club) { state.cash += 300; toast(state, 'Club Marea income +$300', '#b37dff', 2); }

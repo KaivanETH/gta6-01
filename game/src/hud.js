@@ -61,7 +61,7 @@ export function drawHUD(ctx, state, view, time) {
   drawToasts(ctx, state, W);
   drawBust(ctx, state, W, H);
   drawSubtitle(ctx, state, W, H);
-  drawBigText(ctx, state, W, H);
+  if (!state.credits) drawBigText(ctx, state, W, H);
   if (state.respawnTimer > 0) drawDeath(ctx, state, W, H);
 }
 

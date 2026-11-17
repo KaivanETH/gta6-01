@@ -213,29 +213,35 @@ function genHotels(R, world, block, L, add) {
 
 function genDocks(R, world, block, L, add) {
   block.ground = 'yard';
-  const big = R.chance(0.6);
+  const big = R.chance(0.6) || (block.bi === 9 && block.bj === 10);
+  const roof = R.pick(['#b8432f', '#1f7a8c', '#dfe3e6', '#d97b29', '#5d7b93', '#3f8f6b']);
+  const label = block.bi === 8 && block.bj === 9 ? 'TIBURÓN' : String(block.bi * 10 + block.bj).padStart(2, '0');
   if (big) {
     add({
-      x: L.x + 10, y: L.y + 10, w: L.w - 20, h: 130, ht: R.range(26, 40), district: 'muelles', style: 'warehouse',
-      base: R.pick(WAREHOUSE), roof: R.pick(['#8c9399', '#a7aeb3', '#7d858c']), roofType: 'corrugated', windows: '#333',
+      x: L.x + 10, y: L.y + 10, w: L.w - 20, h: 120, ht: R.range(26, 40), district: 'muelles', style: 'warehouse',
+      base: R.pick(WAREHOUSE), roof, roofType: 'corrugated', windows: '#333', label,
     });
   } else {
     add({
       x: L.x + 10, y: L.y + 10, w: 120, h: L.h - 20, ht: R.range(26, 40), district: 'muelles', style: 'warehouse',
-      base: R.pick(WAREHOUSE), roof: R.pick(['#8c9399', '#a7aeb3']), roofType: 'corrugated', windows: '#333',
+      base: R.pick(WAREHOUSE), roof, roofType: 'corrugated', windows: '#333', label,
     });
   }
   // container stacks in the yard
-  const yard = big ? { x: L.x + 10, y: L.y + 160, w: L.w - 20, h: L.h - 170 } : { x: L.x + 150, y: L.y + 10, w: L.w - 160, h: L.h - 20 };
+  const yard = big ? { x: L.x + 10, y: L.y + 145, w: L.w - 20, h: L.h - 155 } : { x: L.x + 145, y: L.y + 10, w: L.w - 155, h: L.h - 20 };
+  block.yard = yard;
   const horiz = yard.w > yard.h;
-  const n = horiz ? 3 : 4;
-  for (let k = 0; k < n; k++) {
-    if (R.chance(0.25)) continue;
-    const c = horiz
-      ? { x: yard.x + 8 + k * 80, y: yard.y + 10 + R.range(0, 20), w: 64, h: 26 }
-      : { x: yard.x + 10 + R.range(0, 20), y: yard.y + 8 + k * 58, w: 26, h: 50 };
-    const col = R.pick(CONTAINER);
-    add({ ...c, ht: R.pick([12, 12, 24]), district: 'muelles', style: 'container', base: col, roof: col, roofType: 'container', windows: '#000' });
+  // two staggered rows of container stacks with aisles between them
+  for (let row = 0; row < 2; row++) {
+    const n = horiz ? 3 : 4;
+    for (let k = 0; k < n; k++) {
+      if (R.chance(0.22)) continue;
+      const c = horiz
+        ? { x: yard.x + 6 + k * 80 + row * 22, y: yard.y + 8 + row * 62, w: 58, h: 24 }
+        : { x: yard.x + 8 + row * 48, y: yard.y + 6 + k * 58 + row * 18, w: 24, h: 50 };
+      const col = R.pick(CONTAINER);
+      add({ ...c, ht: R.pick([12, 14, 26]), district: 'muelles', style: 'container', base: col, roof: col, roofType: 'container', windows: '#000' });
+    }
   }
   if (R.chance(0.6)) world.parking.push({ x: yard.x + yard.w - 30, y: yard.y + yard.h - 30, a: R.range(0, 6.28), lot: true, prefer: 'pickup' });
 }
@@ -384,6 +390,9 @@ function placeLandmarks(world) {
   world.landmarks.policeHQ = { ...front(7, 6, 'n'), name: 'Comisaría Central' };
   world.landmarks.beach = { x: world.beach.x + 150, y: nodeY(5), name: 'Playa Coral' };
   world.landmarks.stakeout = { ...road(8, 8, 1, 0), name: 'Calle Ancla' };
+  const yb = world.blocks.find((b) => b.bi === 9 && b.bj === 10);
+  const yard = yb.yard || yb.lot;
+  world.landmarks.dockyard = { x: yard.x + yard.w / 2, y: yard.y + yard.h / 2, name: 'Patio Tiburón' };
   world.landmarks.villa = { ...front(0, 1, 'e'), name: 'Villa Varela' };
 }
 

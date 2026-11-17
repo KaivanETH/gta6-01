@@ -19,7 +19,7 @@ export function updateCamera(state, dt, view) {
     const v = pl.vehicle;
     lx = clamp(v.vx * 0.55, -300, 300); ly = clamp(v.vy * 0.45, -200, 200);
     const sp = Math.hypot(v.vx, v.vy) / v.spec.maxSpeed;
-    zoom = 0.95 - sp * 0.3;
+    zoom = 1.0 - sp * 0.24;
   } else {
     lx = pl.vx * 0.3; ly = pl.vy * 0.3;
   }

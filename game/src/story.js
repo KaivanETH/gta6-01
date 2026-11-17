@@ -89,9 +89,9 @@ export const MISSIONS = [
     steps: [
       { type: 'dialog', lines: [['ramon', 'Take this. I hoped I\'d never hand it to you.'], ['ramon', 'Varela keeps a ledger: every cop, every payoff. Take it and he\'s nothing.']] },
       { type: 'giveWeapon', weapon: 'smg', ammo: 180, toast: 'Received Ráfaga SMG + 180 rounds' },
-      { type: 'goto', at: 'pierEnd', r: 260, text: 'Raid the Tiburones yard at the docks' },
-      { type: 'eliminate', tag: 'yard', at: 'pierEnd', count: 8, spread: 200, text: 'Take out the Tiburones crew' },
-      { type: 'pickupItem', at: 'pierEnd', item: 'Varela\'s Ledger', text: 'Grab Varela\'s ledger' },
+      { type: 'goto', at: 'dockyard', r: 300, text: 'Raid the Tiburones container yard at the docks' },
+      { type: 'eliminate', tag: 'yard', at: 'dockyard', count: 8, spread: 170, text: 'Take out the Tiburones crew' },
+      { type: 'pickupItem', at: 'dockyard', item: 'Varela\'s Ledger', text: 'Grab Varela\'s ledger' },
       { type: 'wanted', level: 3, toast: 'Varela called in his cops!' },
       { type: 'loseWanted', text: 'Escape the police' },
       { type: 'goto', at: 'cafe', r: 34, text: 'Return to Café La Ramona' },

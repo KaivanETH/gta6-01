@@ -4,7 +4,7 @@
 import { MISSIONS, CAST, CREDITS } from './story.js';
 import { rng, dist2, clamp } from './mathutil.js';
 import { lotRect } from './world.js';
-import { lineOfSight } from './world.js';
+import { lineOfSight, solidAt } from './world.js';
 import { nearestNode, neighbors, laneSegment, nextNodeToward, nodePos } from './roads.js';
 import { createVehicle } from './vehicles.js';
 import { createPed, randomLook } from './peds.js';
@@ -139,7 +139,9 @@ const STEPS = {
         return 'done';
       }
       if (m.timer <= 0) return 'fail:He got away';
-      if (dist2(v.x, v.y, me.x, me.y) > 1700 * 1700) return 'fail:He got away';
+      const d2 = dist2(v.x, v.y, me.x, me.y);
+      if (d2 < 800 * 800) m.engaged = true;
+      if (m.engaged && d2 > 1700 * 1700) return 'fail:He got away';
       m.extra = { label: 'Target car', value: v.health / v.maxHealth };
     },
     marker(state, m, st) { const v = m.tags[st.tag]; return v && { x: v.x, y: v.y, color: '#ff4f4f', icon: '!', r: 30 }; },
@@ -228,7 +230,13 @@ const STEPS = {
       for (let k = 0; k < st.count; k++) {
         const a = (k / st.count) * Math.PI * 2;
         const isBoss = st.boss && k === 0;
-        const g = createPed(p.x + Math.cos(a) * st.spread * rng.range(0.5, 1), p.y - 60 + Math.sin(a) * st.spread * rng.range(0.4, 0.8), isBoss ? 'boss' : 'gang', {
+        let gx = p.x, gy = p.y;
+        for (let tries = 0; tries < 20; tries++) {
+          const r = st.spread * rng.range(0.3, 1);
+          gx = p.x + Math.cos(a + tries * 0.7) * r; gy = p.y + Math.sin(a + tries * 0.7) * r;
+          if (!solidAt(state.world, gx, gy) && !solidAt(state.world, gx + 8, gy + 8) && !solidAt(state.world, gx - 8, gy - 8)) break;
+        }
+        const g = createPed(gx, gy, isBoss ? 'boss' : 'gang', {
           persistent: true, missionTag: st.tag, health: isBoss ? 420 : 75, weapon: isBoss ? 'smg' : rng.chance(0.3) ? 'shotgun' : 'pistol',
           look: isBoss ? { skin: '#c68642', shirt: '#f4f4f4', pants: '#111', hair: '#111', bandana: '#d4af37' } : undefined,
         });

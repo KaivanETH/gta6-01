@@ -81,7 +81,7 @@ export const CRIME_HEAT = {
 };
 
 // ---- Time of day -----------------------------------------------------------------
-export const SECONDS_PER_HOUR = 20;  // a full day is 8 real minutes
+export const SECONDS_PER_HOUR = 30;  // a full day is 12 real minutes
 export const START_HOUR = 10.5;
 
 // ---- Economy ---------------------------------------------------------------------

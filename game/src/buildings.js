@@ -178,10 +178,19 @@ function drawRoof(ctx, s, time, night) {
       else for (let yy = y + 4; yy < y + h; yy += 6) { ctx.moveTo(x, yy); ctx.lineTo(x + w, yy); }
       ctx.stroke();
       ctx.fillStyle = 'rgba(255,255,255,0.35)';
-      for (let k = 0; k < 3; k++) ctx.fillRect(x + w * (0.2 + k * 0.3) - 8, y + h / 2 - 8, 16, 16);
+      for (let k = 0; k < 3; k++) ctx.fillRect(x + w * (0.2 + k * 0.3) - 8, y + h * 0.25 - 8, 16, 16);
+      if (s.label) {
+        const size = Math.min(h * 0.38, w / (s.label.length * 0.75));
+        ctx.font = `900 ${size}px "Trebuchet MS", sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.fillStyle = 'rgba(255,255,255,0.55)';
+        ctx.fillText(s.label, x + w / 2, y + h * 0.62);
+      }
+      ctx.strokeStyle = shadeColor(s.roof, -0.3); ctx.lineWidth = 2; ctx.strokeRect(x + 1, y + 1, w - 2, h - 2);
       break;
     }
     case 'container': {
+      ctx.fillStyle = 'rgba(255,255,255,0.18)';
+      if (w > h) ctx.fillRect(x, y, w, h * 0.3); else ctx.fillRect(x, y, w * 0.3, h);
       ctx.strokeStyle = 'rgba(0,0,0,0.3)'; ctx.lineWidth = 1;
       ctx.beginPath();
       if (w > h) for (let xx = x + 3; xx < x + w; xx += 4) { ctx.moveTo(xx, y + 1); ctx.lineTo(xx, y + h - 1); }
@@ -325,24 +334,40 @@ function drawUmbrella(ctx, d, cam) {
 }
 
 function drawCrane(ctx, c, cam) {
-  const ht = c.small ? 70 : 130;
+  const ht = c.small ? 80 : 130;
   const f = CAM_H / (CAM_H - ht);
-  const w = c.small ? 30 : 50, h = c.small ? 24 : 40;
+  const w = c.small ? 44 : 64, h = c.small ? 30 : 40;
   const legs = [[c.x - w / 2, c.y - h / 2], [c.x + w / 2, c.y - h / 2], [c.x + w / 2, c.y + h / 2], [c.x - w / 2, c.y + h / 2]];
-  ctx.strokeStyle = '#d9a21b'; ctx.lineWidth = 4;
-  ctx.beginPath();
   const tops = legs.map(([x, y]) => proj(cam, x, y, f));
+  // legs
+  ctx.strokeStyle = '#b8860b'; ctx.lineWidth = 5; ctx.lineCap = 'round';
+  ctx.beginPath();
   legs.forEach(([x, y], i) => { ctx.moveTo(x, y); ctx.lineTo(tops[i][0], tops[i][1]); });
   ctx.stroke();
-  ctx.fillStyle = '#f2b824';
-  const [bx0, by0] = proj(cam, c.x - 7, c.y - (c.small ? 60 : 120), f);
-  const [bx1, by1] = proj(cam, c.x + 7, c.y + (c.small ? 70 : 220), f);
-  ctx.fillRect(bx0, by0, bx1 - bx0, by1 - by0);
+  ctx.fillStyle = '#3a3f45';
+  for (const [x, y] of legs) ctx.fillRect(x - 4, y - 4, 8, 8);
+  // top frame
+  ctx.strokeStyle = '#f2b824'; ctx.lineWidth = 6 * f;
+  ctx.beginPath(); ctx.moveTo(tops[0][0], tops[0][1]);
+  for (let i = 1; i <= 4; i++) ctx.lineTo(tops[i % 4][0], tops[i % 4][1]);
+  ctx.stroke();
+  // boom reaching out over the water, with lattice
+  const back = c.small ? 30 : 70, reach = c.small ? 90 : 240, bw = c.small ? 10 : 16;
+  const [bx0, by0] = proj(cam, c.x - bw / 2, c.y - back, f);
+  const [bx1, by1] = proj(cam, c.x + bw / 2, c.y + reach, f);
+  ctx.fillStyle = '#f2b824'; ctx.fillRect(bx0, by0, bx1 - bx0, by1 - by0);
   ctx.strokeStyle = '#9a6f0c'; ctx.lineWidth = 1.5;
   ctx.beginPath();
-  for (let yy = by0; yy < by1; yy += 10 * f) { ctx.moveTo(bx0, yy); ctx.lineTo(bx1, yy + 8 * f); }
+  const step = 12 * f;
+  let flip = false;
+  for (let yy = by0; yy < by1 - step; yy += step) { ctx.moveTo(flip ? bx0 : bx1, yy); ctx.lineTo(flip ? bx1 : bx0, yy + step); flip = !flip; }
   ctx.stroke();
-  ctx.fillStyle = '#3a3f45';
-  const [cx0, cy0] = proj(cam, c.x - 14, c.y - 18, f);
-  ctx.fillRect(cx0, cy0, 28 * f, 26 * f);
+  ctx.strokeRect(bx0, by0, bx1 - bx0, by1 - by0);
+  // machinery house and trolley
+  ctx.fillStyle = '#e8e2d6';
+  const [mx, my] = proj(cam, c.x - 14, c.y - back + 4, f);
+  ctx.fillRect(mx, my, 28 * f, 22 * f);
+  ctx.fillStyle = '#c0392b';
+  const [tx, ty] = proj(cam, c.x - 9, c.y + reach * 0.55, f);
+  ctx.fillRect(tx, ty, 18 * f, 14 * f);
 }
