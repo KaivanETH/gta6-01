@@ -1,53 +1,54 @@
-// Keyboard and pointer input. Held keys give a steering direction; one-shot presses (start or
-// restart, pause) are queued as bit flags and taken once by the loop, so a press between two
-// frames is never lost and never counted twice.
+// Keyboard and mouse input: held keys, per-frame key presses, mouse position/buttons and wheel.
 
-export const ACTION_CONFIRM = 1;
-export const ACTION_PAUSE = 2;
+const held = new Set();
+const pressed = new Set();
+const mouse = { x: 640, y: 360, down: false, clicked: false, rightDown: false, moved: 0, wheel: 0 };
+let onFirstGesture = null;
 
-const LEFT = new Set(['ArrowLeft', 'KeyA']);
-const RIGHT = new Set(['ArrowRight', 'KeyD']);
-const CONFIRM = new Set(['Space', 'Enter']);
-const PAUSE = new Set(['KeyP', 'Escape']);
-
-export function createInput(target) {
-  let left = false;
-  let right = false;
-  let actions = 0;
-
-  window.addEventListener('keydown', (event) => {
-    if (LEFT.has(event.code)) left = true;
-    else if (RIGHT.has(event.code)) right = true;
-    else if (CONFIRM.has(event.code)) {
-      if (!event.repeat) actions |= ACTION_CONFIRM;
-    } else if (PAUSE.has(event.code)) {
-      if (!event.repeat) actions |= ACTION_PAUSE;
-    } else return;
-    event.preventDefault();
+export function initInput(canvas, firstGesture) {
+  onFirstGesture = firstGesture;
+  const gesture = () => { if (onFirstGesture) { const f = onFirstGesture; onFirstGesture = null; f(); } };
+  window.addEventListener('keydown', (e) => {
+    if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Space', 'Tab'].includes(e.code)) e.preventDefault();
+    if (!held.has(e.code)) pressed.add(e.code);
+    held.add(e.code);
+    gesture();
   });
-  window.addEventListener('keyup', (event) => {
-    if (LEFT.has(event.code)) left = false;
-    else if (RIGHT.has(event.code)) right = false;
-  });
-  // A key released while the tab is hidden never sends keyup: let go of everything on blur.
-  window.addEventListener('blur', () => {
-    left = false;
-    right = false;
-  });
-  target.addEventListener('pointerdown', () => {
-    actions |= ACTION_CONFIRM;
-  });
-
-  return {
-    /** -1 for left, 1 for right, 0 for neither or both. */
-    direction() {
-      return (right ? 1 : 0) - (left ? 1 : 0);
-    },
-    /** The one-shot presses since the last call, as ACTION_* flags. */
-    takeActions() {
-      const taken = actions;
-      actions = 0;
-      return taken;
-    },
+  window.addEventListener('keyup', (e) => held.delete(e.code));
+  window.addEventListener('blur', () => held.clear());
+  const toCanvas = (e) => {
+    const r = canvas.getBoundingClientRect();
+    mouse.x = (e.clientX - r.left) * (canvas.width / r.width);
+    mouse.y = (e.clientY - r.top) * (canvas.height / r.height);
   };
+  canvas.addEventListener('mousemove', (e) => { toCanvas(e); mouse.moved = 1.5; });
+  canvas.addEventListener('mousedown', (e) => {
+    toCanvas(e);
+    if (e.button === 0) { mouse.down = true; mouse.clicked = true; } else if (e.button === 2) mouse.rightDown = true;
+    gesture();
+  });
+  window.addEventListener('mouseup', (e) => { if (e.button === 0) mouse.down = false; else if (e.button === 2) mouse.rightDown = false; });
+  canvas.addEventListener('contextmenu', (e) => e.preventDefault());
+  canvas.addEventListener('wheel', (e) => { mouse.wheel += Math.sign(e.deltaY); e.preventDefault(); }, { passive: false });
+}
+
+export const isDown = (code) => held.has(code);
+export const wasPressed = (code) => pressed.has(code);
+export const anyPressed = (...codes) => codes.some((c) => pressed.has(c));
+export const anyDown = (...codes) => codes.some((c) => held.has(c));
+export const getMouse = () => mouse;
+
+// Called once per rendered frame after all systems have read their input.
+export function endInputFrame(dt) {
+  pressed.clear();
+  mouse.clicked = false;
+  mouse.wheel = 0;
+  mouse.moved = Math.max(0, mouse.moved - dt);
+}
+
+// Movement axes shared by walking and driving.
+export function moveAxes() {
+  const x = (anyDown('KeyD', 'ArrowRight') ? 1 : 0) - (anyDown('KeyA', 'ArrowLeft') ? 1 : 0);
+  const y = (anyDown('KeyS', 'ArrowDown') ? 1 : 0) - (anyDown('KeyW', 'ArrowUp') ? 1 : 0);
+  return { x, y };
 }
