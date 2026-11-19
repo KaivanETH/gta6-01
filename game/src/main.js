@@ -67,7 +67,7 @@ function freshState() {
 
 // Seed traffic and pedestrians around a point so the city is alive immediately.
 function populateAround(x, y) {
-  for (let i = 0; i < 26; i++) {
+  for (let i = 0; i < 30; i++) {
     const e = randomEdgeNear(rng, x, y, 150, 1300);
     if (e) state.vehicles.push(makeTrafficCar(state, e.a, e.b));
   }
@@ -102,6 +102,8 @@ const api = {
     toast(state, 'Save loaded', '#7ddc6a');
   },
   save() { saveGame(state); },
+  // seed a lively crowd and traffic around a point (the photo scenes use this off their spawn)
+  populate(x, y) { populateAround(x, y); },
   quitToTitle() { goTitle(); },
   startPlay: (...a) => startPlay(...a),
 };

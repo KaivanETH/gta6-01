@@ -87,13 +87,33 @@ export function drawMinimap(ctx, state, x, y, size, time) {
       if (inside(q)) blip(ctx, q.x, q.y, 2.5, p.role === 'cop' ? '#3b7bff' : '#ff3b3b');
     }
   }
+  // search zone: while the cops have lost sight, their last known area pulses on the map
+  if (wl > 0 && !state.wanted.seen) {
+    const q = toMap(state.wanted.lastX, state.wanted.lastY);
+    const breathe = 1 + Math.sin(time * 4) * 0.07;
+    const r = (250 + wl * 65) * k * breathe;
+    ctx.fillStyle = Math.floor(time * 3) % 2 ? 'rgba(255,60,60,0.20)' : 'rgba(60,110,255,0.20)';
+    ctx.beginPath(); ctx.arc(q.x, q.y, r, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = 'rgba(255,255,255,0.65)'; ctx.lineWidth = 1.5;
+    ctx.setLineDash([4, 3]); ctx.stroke(); ctx.setLineDash([]);
+    ctx.fillStyle = 'rgba(255,255,255,0.85)'; ctx.font = 'bold 8px sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText('LAST SEEN', q.x, q.y - r - 4);
+  }
   if (state.heli) { const q = toMap(state.heli.x, state.heli.y); if (inside(q)) iconBlip(ctx, q.x, q.y, '#1f3a8a', 'H'); }
   // shells
   if (state.shells) for (const s of state.shells) if (!s.taken) { const q = toMap(s.x, s.y); if (inside(q)) blip(ctx, q.x, q.y, 2.5, '#ffd34d'); }
-  // markers
+  // markers: mission targets get a sonar ring so the objective is unmistakable
   for (const m of state.markers || []) {
     let q = toMap(m.x, m.y);
     if (!inside(q)) { if (!m.mission) continue; q = clampEdge(q); }
+    if (m.mission) {
+      const t = time * 0.9 % 1;
+      ctx.strokeStyle = m.color; ctx.globalAlpha = 1 - t; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.arc(q.x, q.y, 8 + t * 12, 0, Math.PI * 2); ctx.stroke();
+      ctx.globalAlpha = 0.25; ctx.fillStyle = m.color;
+      ctx.beginPath(); ctx.arc(q.x, q.y, 13, 0, Math.PI * 2); ctx.fill();
+      ctx.globalAlpha = 1;
+    }
     iconBlip(ctx, q.x, q.y, m.color, m.icon || '!');
   }
   // player arrow

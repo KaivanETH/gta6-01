@@ -44,7 +44,7 @@ const TERRACOTTA = ['#c8643c', '#b5552f', '#d9774b', '#a84b2a'];
 const NEON_WORDS = {
   rosa: ['CAFÉ SOL', 'BAR OLA', 'TACOS', 'BODEGA', 'SALSA', 'LUNA', 'PANADERÍA', 'CUMBIA'],
   playa: ['HOTEL', 'MOTEL', 'SURF', 'MARISCOS', 'CORAL INN', 'TIKI'],
-  centro: ['BANCO', 'CASINO', 'NEÓN', 'TORRE', 'DORADA'],
+  centro: ['BANCO', 'CASINO', 'NEÓN', 'TORRE', 'DORADA', 'OFICINAS', 'SEGUROS', 'CINE', 'JOYERÍA', 'GALERÍA', 'FARMACIA', 'MERCADO'],
 };
 const NEON_COLORS = ['#ff4fd8', '#3cf2ff', '#ff5a5a', '#ffe14d', '#7dff6a', '#b37dff'];
 

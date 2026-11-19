@@ -22,7 +22,7 @@ export function createGameState(world) {
     player: createPlayer(sp.x + 30, sp.y),
     vehicles: [], peds: [], tracers: [], particles: [], skids: [], decals: [], pickups: [],
     heli: null,
-    wanted: { level: 0, heat: 0, unseen: 0, seen: false, lastX: 0, lastY: 0, roadblockCd: 8, flash: 0 },
+    wanted: { level: 0, heat: 0, unseen: 0, seen: false, lastX: 0, lastY: 0, roadblockCd: 8, flash: 0, units: 0, evaded: 0, bust: 0 },
     cash: START_CASH,
     story: { next: 0, completed: [], introSeen: false },
     mission: null,

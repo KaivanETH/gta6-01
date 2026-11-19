@@ -1,6 +1,6 @@
 // Pedestrians: creation and looks, sidewalk-ring walking with street crossings, beach/park
 // wanderers, panic and fleeing, getting hit by cars, knock-downs, deaths and population upkeep.
-import { NODES_X, NODES_Y, ROAD_HALF, SIDEWALK, nodeX, nodeY, BLOCK, MARGIN, CRIME_HEAT } from './config.js';
+import { NODES_X, NODES_Y, ROAD_HALF, SIDEWALK, nodeX, nodeY, BLOCK, MARGIN, CRIME_HEAT, PED_TARGET } from './config.js';
 import { reportCrime } from './police.js';
 import { dropCash } from './pickups.js';
 import { solidAt } from './world.js';
@@ -267,11 +267,12 @@ export function managePopulation(state, dt) {
   state.peds = state.peds.filter((p) => p.persistent || dist2(p.x, p.y, cx, cy) < far2 && !(p.state === 'dead' && p.deadT > 45));
   const civs = state.peds.filter((p) => p.role === 'civ').length;
   const hour = gameHour(state);
-  const target = hour > 1 && hour < 6 ? 44 : 92;
+  const target = hour > 1 && hour < 6 ? PED_TARGET.night : PED_TARGET.day;
   state.pedCd -= dt;
   if (civs < target && state.pedCd <= 0) {
-    state.pedCd = 0.05;
-    spawnCivNear(state, cx, cy, state.mode === 'play' ? 480 : 0, 1250);
+    // Fill a little faster while the streets are still thin, then settle into a steady trickle.
+    state.pedCd = civs < target * 0.55 ? 0.03 : 0.055;
+    spawnCivNear(state, cx, cy, state.mode === 'play' ? 460 : 0, 1250);
   }
 }
 

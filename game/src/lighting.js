@@ -45,7 +45,11 @@ export function drawLighting(ctx, state, view, lit, bounds, time, applyCam) {
   const ph = Math.floor(time * 8) % 2;
   for (const v of state.vehicles) {
     if (!inView(v.x, v.y, 100)) continue;
-    if (v.siren && !v.wrecked) glow(v.x, v.y, 60, ph ? 'rgba(255,40,40,0.9)' : 'rgba(40,90,255,0.9)', 0.6 * lit.night + 0.22);
+    if (v.siren && !v.wrecked) {
+      // cruisers throw a readable red/blue pool even in daylight, stronger after dusk
+      glow(v.x, v.y, 74, ph ? 'rgba(255,45,55,0.95)' : 'rgba(60,110,255,0.95)', 0.46 * lit.night + 0.3);
+      if (Math.floor(time * 8) % 4 < 2) glow(v.x, v.y, 30, 'rgba(255,255,255,0.5)', 0.25);
+    }
     if (v.driver && !v.wrecked) {
       const c = Math.cos(v.a), s = Math.sin(v.a);
       glow(v.x - c * v.spec.len / 2, v.y - s * v.spec.len / 2, 16, 'rgba(255,30,30,0.8)', 0.6 * lit.night);

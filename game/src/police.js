@@ -3,6 +3,7 @@
 // line-of-sight evasion that drops stars, and the busted check.
 import {
   WANTED_THRESHOLDS, COPS_PER_LEVEL, COP_SIGHT, EVADE_BASE, EVADE_PER_STAR, CRIME_HEAT, ROAD_HALF,
+  PURSUIT, BUST_CAR_TIME, BUST_FOOT_TIME, BUST_LOW_STAR_GRACE, COP_CATCHUP,
 } from './config.js';
 import { createVehicle, forwardSpeed, doorPoint } from './vehicles.js';
 import { createPed, randomLook } from './peds.js';
@@ -10,7 +11,7 @@ import { npcShoot } from './combat.js';
 import { lineOfSight } from './world.js';
 import { randomEdgeNear, laneSegment, nearestNode, nextNodeToward, nodePos, neighbors } from './roads.js';
 import { sfx } from './audio.js';
-import { toast } from './state.js';
+import { toast, bigMessage } from './state.js';
 import { rng, clamp, wrapAngle, dist2, angleTo } from './mathutil.js';
 
 export function playerPos(state) {
@@ -45,15 +46,37 @@ function copUnits(state) {
   return units;
 }
 
+// Seconds of being unseen needed to drop a star at the current level (the HUD fills toward it).
+export function evadeTime(level) {
+  return EVADE_BASE + Math.max(1, level) * EVADE_PER_STAR;
+}
+
+// Seconds a cruiser must sit on the player before the bust: a car is more forgiving than
+// being cornered on foot, and one lone star gives the player time to break away.
+export function bustTime(state) {
+  const lvl = state.wanted.level;
+  const base = state.player.vehicle ? BUST_CAR_TIME : BUST_FOOT_TIME;
+  return base + Math.max(0, 3 - lvl) * BUST_LOW_STAR_GRACE;
+}
+
+// One cruiser rolling in on a lane; the pursuit table decides how close it arrives.
 function spawnCopCar(state, px, py) {
-  const e = randomEdgeNear(rng, px, py, 700, 1200);
-  if (!e) return;
+  const lvl = Math.max(1, state.wanted.level);
+  const [near, far] = (PURSUIT[lvl] || PURSUIT[1]).ring;
+  const e = randomEdgeNear(rng, px, py, near, far);
+  if (!e) return null;
   const seg = laneSegment(e.a, e.b);
   const x = (seg.sx + seg.ex) / 2, y = (seg.sy + seg.ey) / 2;
   const v = createVehicle('police', x, y, seg.angle, { role: 'cop', driver: { role: 'cop', look: randomLook('cop') } });
   v.siren = true; v.sleeping = false;
   v.ai = { node: e.b, prev: e.a, stuck: 0, reverse: 0, shootCd: rng.range(1, 2) };
   state.vehicles.push(v);
+  return v;
+}
+
+// A fresh chase should feel like a response: send a small wave of cruisers at once.
+function sendWaves(state, px, py, n) {
+  for (let i = 0; i < n; i++) spawnCopCar(state, px, py);
 }
 
 function spawnRoadblock(state, pp) {
@@ -126,22 +149,31 @@ export function updatePolice(state, dt) {
     if (w.seen) { w.unseen = 0; w.lastX = pp.x; w.lastY = pp.y; }
     else {
       w.unseen += dt;
-      if (w.unseen > EVADE_BASE + w.level * EVADE_PER_STAR) {
+      if (w.unseen > evadeTime(w.level)) {
         w.unseen = 0;
         setWantedLevel(state, w.level - 1);
-        if (w.level === 0) { toast(state, 'You lost the cops!', '#7ddc6a', 3); w.heat = 0; }
-        else toast(state, 'Wanted level reduced', '#ffc93c', 2);
+        if (w.level === 0) {
+          w.heat = 0; w.evaded = 3;
+          toast(state, 'You lost the cops', '#7ddc6a', 2.5);
+          bigMessage(state, 'EVADED', 'They lost your trail — keep the engine hot', '#7ddc6a', 2.4);
+          sfx.star();
+        } else toast(state, 'Wanted level reduced', '#ffc93c', 2);
       }
     }
   }
 
   // spawn pursuit units
   const activeCars = state.vehicles.filter((v) => v.role === 'cop' && v.driver && !v.wrecked).length;
-  if (w.level > 0 && activeCars < COPS_PER_LEVEL[w.level] && rng.chance(dt * 1.2)) spawnCopCar(state, pp.x, pp.y);
-  if (w.level >= 3) {
-    w.roadblockCd -= dt;
-    if (w.roadblockCd <= 0) { w.roadblockCd = 16; spawnRoadblock(state, pp); }
+  w.units = activeCars;
+  w.evaded = Math.max(0, (w.evaded || 0) - dt);
+  const tune = PURSUIT[Math.max(1, w.level)] || PURSUIT[1];
+  if (w.level > 0 && activeCars < COPS_PER_LEVEL[w.level] && rng.chance(dt * tune.roll)) {
+    sendWaves(state, pp.x, pp.y, Math.min(tune.send, COPS_PER_LEVEL[w.level] - activeCars));
   }
+  if (tune.roadblock > 0) {
+    w.roadblockCd -= dt;
+    if (w.roadblockCd <= 0) { w.roadblockCd = tune.roadblock; spawnRoadblock(state, pp); }
+  } else w.roadblockCd = Math.min(w.roadblockCd, 4);
   updateHeli(state, dt, pp);
 
   // busted check
@@ -160,7 +192,7 @@ export function updatePolice(state, dt) {
     }
   }
   w.bust = bustNear ? (w.bust || 0) + dt : Math.max(0, (w.bust || 0) - dt * 2);
-  if (w.bust > (pl.vehicle ? 2.2 : 1.4)) { w.bust = 0; state.onBusted && state.onBusted(); }
+  if (w.bust > bustTime(state)) { w.bust = 0; state.onBusted && state.onBusted(); }
 
   // the chase is over: cop cars return to normal patrol and leave
   if (w.level === 0) {
@@ -176,10 +208,23 @@ export function driveCop(state, v, dt) {
   const d = Math.hypot(pp.x - v.x, pp.y - v.y);
   if (ai.reverse > 0) { ai.reverse -= dt; v.throttle = -1; v.steer = 0; v.handbrake = false; return; }
 
-  let tx, ty, target = 400;
-  const los = d < 340 && lineOfSight(state.world, v.x, v.y, pp.x, pp.y);
+  const lvl = state.wanted.level;
+  const tune = PURSUIT[Math.max(1, lvl)] || PURSUIT[1];
+  let tx, ty, target = tune.speed || 400;
+  const los = d < 300 + lvl * 30 && lineOfSight(state.world, v.x, v.y, pp.x, pp.y);
+  // a cruiser far from the action drives flat out until it is back in the wake
+  if (pl.vehicle && d > 520) target = Math.max(target, Math.hypot(pp.vx, pp.vy) + COP_CATCHUP);
   if (los) {
-    tx = pp.x + pp.vx * 0.35; ty = pp.y + pp.vy * 0.35;
+    // aim ahead of the player to cut them off and ram; close in hard when right behind
+    const lead = tune.lead || 0.3;
+    tx = pp.x + pp.vx * lead; ty = pp.y + pp.vy * lead;
+    // close the gap fast from range, then sit on the player's bumper instead of ploughing through
+    if (pl.vehicle) {
+      const ps = Math.hypot(pp.vx, pp.vy);
+      if (d > 520) target = Math.max(target, ps + COP_CATCHUP);
+      else if (d > 140) target = Math.max(target, ps + 50);
+      else target = Math.min(target, ps + 15);
+    }
     if (!pl.vehicle && d < 170) {
       // stop and deploy officers
       v.throttle = 0; v.handbrake = true; v.steer = 0;

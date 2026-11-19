@@ -17,13 +17,18 @@ export function updateCamera(state, dt, view) {
   let lx = 0, ly = 0, zoom = 1.12;
   if (pl.vehicle) {
     const v = pl.vehicle;
-    lx = clamp(v.vx * 0.55, -300, 300); ly = clamp(v.vy * 0.45, -200, 200);
+    // In a hot pursuit the camera stops leaning so far ahead, which keeps the cruisers on
+    // the player's bumper inside the frame instead of below the bottom edge.
+    const chasing = state.wanted.level >= 3;
+    const lead = chasing ? 0.26 : 0.55, leadY = chasing ? 0.2 : 0.45;
+    lx = clamp(v.vx * lead, chasing ? -150 : -300, chasing ? 150 : 300);
+    ly = clamp(v.vy * leadY, chasing ? -110 : -200, chasing ? 110 : 200);
     const sp = Math.hypot(v.vx, v.vy) / v.spec.maxSpeed;
-    zoom = 1.0 - sp * 0.24;
+    zoom = 1.06 - sp * 0.19;
   } else {
     lx = pl.vx * 0.3; ly = pl.vy * 0.3;
   }
-  if (state.wanted.level >= 3 && pl.vehicle) zoom -= 0.05;
+  if (state.wanted.level >= 3 && pl.vehicle) zoom -= 0.03;
   cam.targetZoom = zoom * (view.zoomScale || 1);
   const k = 1 - Math.exp(-dt * 4.5);
   cam.lookX = lerp(cam.lookX || 0, lx, 1 - Math.exp(-dt * 1.8));

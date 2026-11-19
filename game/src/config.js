@@ -73,9 +73,24 @@ export const WEAPON_ORDER = ['fist', 'knife', 'pistol', 'smg', 'shotgun'];
 // ---- Wanted level ----------------------------------------------------------------
 export const WANTED_THRESHOLDS = [0, 1, 70, 170, 330, 540]; // heat needed for 0..5 stars
 export const COPS_PER_LEVEL = [0, 1, 2, 4, 6, 8];
+// One row per star (index 0 unused): how many cruisers a spawn roll sends, how often that
+// roll happens per second, the ring they arrive on around the player, their cruise speed,
+// how far ahead of the player they aim a ram, and seconds between roadblocks (0 = none).
+export const PURSUIT = [
+  { roll: 0,    send: 0, ring: [800, 1250], speed: 0,   lead: 0,    roadblock: 0 },
+  { roll: 0.55, send: 1, ring: [780, 1200], speed: 320, lead: 0.20, roadblock: 0 },
+  { roll: 0.95, send: 1, ring: [740, 1150], speed: 368, lead: 0.30, roadblock: 0 },
+  { roll: 1.55, send: 2, ring: [600, 960], speed: 412, lead: 0.40, roadblock: 22 },
+  { roll: 2.20, send: 2, ring: [560, 900], speed: 444, lead: 0.48, roadblock: 16 },
+  { roll: 3.00, send: 3, ring: [540, 900],  speed: 474, lead: 0.55, roadblock: 9 },
+];
 export const COP_SIGHT = 560;
+export const COP_CATCHUP = 150;      // extra closing speed for a cruiser that has fallen far behind
 export const EVADE_BASE = 7;        // seconds unseen before a star drops
 export const EVADE_PER_STAR = 1.6;
+export const BUST_CAR_TIME = 2.3;   // seconds pinned in a car before BUSTED
+export const BUST_FOOT_TIME = 1.5;  // ... and on foot
+export const BUST_LOW_STAR_GRACE = 0.45; // extra seconds per missing star, so 1 star is forgiving
 export const CRIME_HEAT = {
   jack: 45, hitPed: 30, killPed: 60, gunfire: 25, hitCop: 90, killCop: 180, wreckCop: 140, blowCar: 70,
 };
@@ -83,6 +98,13 @@ export const CRIME_HEAT = {
 // ---- Time of day -----------------------------------------------------------------
 export const SECONDS_PER_HOUR = 30;  // a full day is 12 real minutes
 export const START_HOUR = 10.5;
+
+// ---- Street life ----------------------------------------------------------------
+// Target crowd sizes around the player; the city fills toward these and thins at night.
+export const TRAFFIC_TARGET = { night: 34, commute: 118, evening: 96 };
+export const PED_TARGET = { night: 56, day: 140 };
+export const COP_EXTRA_FILL = 2;     // cruisers added straight away when a chase begins
+
 
 // ---- Economy ---------------------------------------------------------------------
 export const START_CASH = 350;

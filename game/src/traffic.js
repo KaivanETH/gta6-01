@@ -1,7 +1,7 @@
 // Civilian traffic AI: lane following with pure-pursuit steering, turns at intersections,
 // stopping for red lights, braking for cars/peds/the player, honking, panic driving and
 // spawning/despawning cars on lanes around the player. Also seeds the parked cars.
-import { TRAFFIC_MIX } from './config.js';
+import { TRAFFIC_MIX, TRAFFIC_TARGET } from './config.js';
 import { createVehicle, forwardSpeed } from './vehicles.js';
 import { randomLook } from './peds.js';
 import { laneSegment, chooseNextNode, randomEdgeNear, lightState, nodePos, nearestNode, neighbors } from './roads.js';
@@ -35,8 +35,8 @@ export function manageTraffic(state, dt) {
     const d2 = dist2(v.x, v.y, cx, cy);
     const isTraffic = v.role === 'traffic' && v.driver && v.driver !== 'player';
     if (['leaving', 'copParked', 'roadblock', 'cop'].includes(v.role) && v.driver !== 'player' && d2 > 2000 * 2000) continue;
-    if (isTraffic && d2 > 1900 * 1900) continue;
-    if (v.wrecked && d2 > 1600 * 1600 && !v.missionTag) continue;
+    if (isTraffic && d2 > 1600 * 1600) continue;
+    if (v.wrecked && d2 > 1400 * 1400 && !v.missionTag) continue;
     if (v.role === 'abandoned' && d2 > 2200 * 2200 && v.driver !== 'player') continue;
     if (isTraffic) traffic++;
     keep.push(v);
@@ -44,12 +44,16 @@ export function manageTraffic(state, dt) {
   state.vehicles = keep;
   state.trafficCd -= dt;
   const hour = gameHour(state);
-  const target = hour > 1 && hour < 5 ? 22 : 44;
+  // Rush hour fills every lane; late night leaves the avenues nearly empty.
+  const target = hour > 1 && hour < 5 ? TRAFFIC_TARGET.night
+    : hour >= 7 && hour < 19 ? TRAFFIC_TARGET.commute : TRAFFIC_TARGET.evening;
   if (traffic < target && state.trafficCd <= 0) {
     state.trafficCd = 0.08;
-    const minD = state.mode === 'play' ? 640 : 200;
-    const e = randomEdgeNear(rng, cx, cy, minD, 1500);
-    if (e) {
+    const minD = state.mode === 'play' ? 720 : 200;
+    // Two rolls while the streets are filling so a cruise never runs through a hollow city.
+    for (let n = 0; n < (traffic < target * 0.6 ? 2 : 1); n++) {
+      const e = randomEdgeNear(rng, cx, cy, minD, 1400);
+      if (!e) continue;
       const v = makeTrafficCar(state, e.a, e.b);
       if (!state.vehicles.some((o) => dist2(o.x, o.y, v.x, v.y) < 70 * 70)) state.vehicles.push(v);
     }

@@ -78,14 +78,27 @@ export function drawVehicle(ctx, v, time) {
     ctx.fillStyle = '#222'; ctx.fillRect(-hl + 4, -1, L - 8, 2);
   }
   if (t === 'police') {
+    // livery: dark blue flanks, white doors, a wide roof light bar
     ctx.fillStyle = '#16213e';
-    ctx.fillRect(hl - 11, -hw + 2, 9, W - 4);
-    ctx.fillRect(-hl + 2, -hw + 2, 8, W - 4);
-    ctx.fillStyle = '#1f4fa8'; ctx.fillRect(-6, -hw + 1, 12, 2.5); ctx.fillRect(-6, hw - 3.5, 12, 2.5);
+    ctx.fillRect(hl - 12, -hw + 2, 10, W - 4);
+    ctx.fillRect(-hl + 2, -hw + 2, 9, W - 4);
+    ctx.fillStyle = '#1f4fa8'; ctx.fillRect(-7, -hw + 1, 14, 3); ctx.fillRect(-7, hw - 4, 14, 3);
     const on = v.siren && !v.wrecked;
     const ph = Math.floor(time * 8) % 2;
-    ctx.fillStyle = on ? (ph ? '#ff2b2b' : '#5a0d0d') : '#7a1e1e'; ctx.fillRect(-3, -hw + 4, 5, W / 2 - 4);
-    ctx.fillStyle = on ? (ph ? '#14306b' : '#2f7bff') : '#1e2f6a'; ctx.fillRect(-3, 0, 5, W / 2 - 4);
+    // roof pod with the two halves of the bar, brighter and wider than a plain stripe
+    ctx.fillStyle = '#0b1428'; ctx.fillRect(-6, -hw + 3, 12, W - 6);
+    ctx.fillStyle = on ? (ph ? '#ff2436' : '#5a0d16') : '#7a1e26';
+    ctx.fillRect(-5, -hw + 4, 10, W / 2 - 5);
+    ctx.fillStyle = on ? (ph ? '#1f3f8f' : '#3f86ff') : '#20346e';
+    ctx.fillRect(-5, 1, 10, W / 2 - 5);
+    if (on) {
+      ctx.fillStyle = 'rgba(255,255,255,0.85)';
+      ctx.fillRect(ph ? 1 : -5, -hw + 4, 4, 3);
+      ctx.fillRect(ph ? -5 : 1, hw - 7, 4, 3);
+      ctx.strokeStyle = ph ? 'rgba(255,50,60,0.9)' : 'rgba(80,130,255,0.9)';
+      ctx.lineWidth = 1.6;
+      rrect(ctx, -hl, -hw, L, W, 6); ctx.stroke();
+    }
   }
   if (t === 'sports' || t === 'muscle') {
     ctx.fillStyle = 'rgba(255,255,255,0.75)';
@@ -125,8 +138,12 @@ export function drawPed(ctx, p, time, isPlayer = false) {
   ctx.fillStyle = 'rgba(15,10,35,0.3)';
   ctx.beginPath(); ctx.ellipse(3, 4, 8, 6, 0, 0, Math.PI * 2); ctx.fill();
   if (isPlayer) {
-    ctx.strokeStyle = 'rgba(255,79,123,0.55)'; ctx.lineWidth = 1.5;
-    ctx.beginPath(); ctx.arc(0, 0, 12, 0, Math.PI * 2); ctx.stroke();
+    // gold halo so the player reads at a glance on a crowded sidewalk
+    const pulse = 0.55 + Math.sin(time * 5) * 0.15;
+    ctx.strokeStyle = `rgba(255,201,60,${pulse})`; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.arc(0, 0, 13, 0, Math.PI * 2); ctx.stroke();
+    ctx.strokeStyle = 'rgba(255,79,123,0.75)'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.arc(0, 0, 16, 0, Math.PI * 2); ctx.stroke();
   }
   ctx.rotate(p.a);
   const sw = Math.sin(p.walkPhase) * 4;
@@ -195,5 +212,24 @@ export function drawHeli(ctx, h, time) {
     const a = h.rotor + k * Math.PI / 2;
     ctx.beginPath(); ctx.moveTo(Math.cos(a) * 36, Math.sin(a) * 36); ctx.lineTo(-Math.cos(a) * 36, -Math.sin(a) * 36); ctx.stroke();
   }
+  ctx.restore();
+}
+
+// Marks the player's car for the eye: a soft gold ring on the tarmac and a bobbing chevron
+// over the roof, so the hero car stays obvious in a street full of traffic and cruisers.
+export function drawPlayerCarMarker(ctx, v, time) {
+  const pulse = 0.5 + Math.sin(time * 5) * 0.14;
+  ctx.save();
+  ctx.translate(v.x, v.y);
+  ctx.fillStyle = `rgba(255,201,60,${0.10 + pulse * 0.05})`;
+  ctx.beginPath(); ctx.ellipse(0, 0, v.spec.len * 0.74, v.spec.wid * 1.0, v.a, 0, Math.PI * 2); ctx.fill();
+  ctx.strokeStyle = `rgba(255,201,60,${pulse})`; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.ellipse(0, 0, v.spec.len * 0.68, v.spec.wid * 0.92, v.a, 0, Math.PI * 2); ctx.stroke();
+  ctx.restore();
+  ctx.save();
+  ctx.translate(v.x, v.y - 32 + Math.sin(time * 4) * 2);
+  ctx.fillStyle = '#ffc93c'; ctx.strokeStyle = 'rgba(0,0,0,0.75)'; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.moveTo(0, 10); ctx.lineTo(-9, -5); ctx.lineTo(0, 0); ctx.lineTo(9, -5); ctx.closePath();
+  ctx.fill(); ctx.stroke();
   ctx.restore();
 }

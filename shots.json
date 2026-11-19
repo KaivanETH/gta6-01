@@ -1,6 +1,6 @@
 [
-  { "name": "1-chase.jpg", "query": "?scene=chase", "note": "police chase at golden hour: 4 stars, helicopter, mission objective, minimap, speedometer" },
-  { "name": "2-city.jpg", "query": "?scene=city", "note": "driving a taxi through Centro Dorado at noon: traffic, pedestrians, park, HUD" },
-  { "name": "3-mission.jpg", "query": "?scene=mission", "note": "mission 6, Asalto al Muelle: shoot-out in the Los Muelles container yard" },
-  { "name": "4-title.jpg", "query": "", "note": "title screen over the live city" }
+  { "name": "1-chase.jpg", "query": "?scene=chase", "note": "cover: a four-star pursuit on Calle Esperanza — Sol's Rayo GT out front, a pack of cruisers with their lights strobing on the bumper, the helicopter overhead, rubber down the avenue, park crowds and traffic all around, PURSUIT pill and the wanted HUD. Staged by tools/stage.py, which boots the chase photo scene and then drives it with real key events until the frame is right." },
+  { "name": "2-city.jpg", "query": "?scene=city", "note": "a midday cruise down Av. Faro in Centro Dorado: tower roofs with pools and planters, parked cars, taxis at the lights, pedestrians on the pavements, minimap and full HUD." },
+  { "name": "3-mission.jpg", "query": "?scene=mission", "note": "story mission 3, El Flaco Paga, mid-ram through Barrio Rosa: objective ticker with the 2:26 timer, target-car bar, mission blip on the minimap, neon shopfronts." },
+  { "name": "4-title.jpg", "query": "", "note": "title screen over the live city at sunset: logo, subtitle, New Game / Continue / Options / Controls." }
 ]

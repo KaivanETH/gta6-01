@@ -92,7 +92,12 @@ function leaveSkid(state, v) {
     for (let i = 0; i < 2; i++) skid(state, v.lastSkid[i].x, v.lastSkid[i].y, pts[i].x, pts[i].y);
   }
   v.lastSkid = pts;
-  if (rng.chance(0.35)) tireSmoke(state, pts[rng.int(0, 1)].x, pts[0].y);
+  const wheel = pts[rng.int(0, 1)];
+  if (rng.chance(0.26 + v.skidding * 0.5)) {
+    tireSmoke(state, wheel.x, wheel.y, v.skidding);
+    // a real drift smokes off both rear tyres
+    if (v.skidding > 0.65 && rng.chance(0.6)) tireSmoke(state, pts[wheel === pts[0] ? 1 : 0].x, pts[1].y, v.skidding);
+  }
 }
 
 export function vehicleCorners(v, inflate = 0) {
@@ -152,7 +157,7 @@ function collideWorld(state, v) {
 function onImpact(state, v, impact, x, y) {
   if (v.hitCd > 0) return;
   v.hitCd = 0.25;
-  const dmg = Math.max(0, (impact - 60) * 0.09);
+  const dmg = Math.max(0, (impact - 70) * 0.075);
   damageVehicle(state, v, dmg, null);
   sparks(state, x, y, Math.min(16, 4 + impact / 30));
   if (impact > 160) debris(state, x, y, v.color, 4);
@@ -233,10 +238,12 @@ function resolvePair(state, a, b) {
       if (impact > 50 && a.hitCd <= 0 && b.hitCd <= 0) {
         a.hitCd = b.hitCd = 0.3;
         const cx = (p.x + q.x) / 2, cy = (p.y + q.y) / 2;
-        const dmg = (impact - 40) * 0.08;
+        const dmg = (impact - 40) * 0.06;
         const srcA = a.driver === 'player' ? 'player' : null, srcB = b.driver === 'player' ? 'player' : null;
-        damageVehicle(state, a, dmg * (mb / (ma + mb)) * 2, srcB);
-        damageVehicle(state, b, dmg * (ma / (ma + mb)) * 2, srcA);
+        // the hero car shrugs off more of a shunt than the cruisers do, so a pursuit lasts
+        const softA = a.driver === 'player' ? 0.55 : 1, softB = b.driver === 'player' ? 0.55 : 1;
+        damageVehicle(state, a, dmg * (mb / (ma + mb)) * 1.5 * softA, srcB);
+        damageVehicle(state, b, dmg * (ma / (ma + mb)) * 1.5 * softB, srcA);
         sparks(state, cx, cy, Math.min(18, 4 + impact / 25));
         const vol = volAt(state, cx, cy);
         sfx.impact(impact / 260, vol);

@@ -255,11 +255,23 @@ function roofDetail(ctx, s, time, night) {
       break;
     }
     default: {
-      // AC units and vents
-      for (let k = 0; k < 4; k++) {
-        const ax = x + 8 + ((k * 41 + s.id * 13) % Math.max(8, w - 26)), ay = y + 8 + ((k * 29 + s.id * 7) % Math.max(8, h - 24));
-        ctx.fillStyle = '#9aa0a6'; ctx.fillRect(ax, ay, 16, 12);
-        ctx.fillStyle = '#5c6268'; ctx.beginPath(); ctx.arc(ax + 8, ay + 6, 4, 0, Math.PI * 2); ctx.fill();
+      // service roof: AC units, vents, a stairwell hut and a water tank on the bigger roofs
+      const units = Math.min(16, 3 + Math.floor((w * h) / 5200));
+      for (let k = 0; k < units; k++) {
+        const ax = x + 9 + ((k * 53 + s.id * 17) % Math.max(10, w - 32));
+        const ay = y + 9 + ((k * 37 + s.id * 11) % Math.max(10, h - 30));
+        const uw = 12 + (k % 3) * 5, uh = 9 + (k % 2) * 4;
+        ctx.fillStyle = '#8f959b'; ctx.fillRect(ax, ay, uw, uh);
+        ctx.fillStyle = '#5c6268'; ctx.beginPath(); ctx.arc(ax + uw / 2, ay + uh / 2, Math.min(4, uw / 3), 0, Math.PI * 2); ctx.fill();
+      }
+      if (w > 96 && h > 96) {
+        // stairwell hut and its shadow, then a round water tank on stilts
+        ctx.fillStyle = 'rgba(0,0,0,0.12)'; ctx.fillRect(cx - 20, cy - 12, 40, 30);
+        ctx.fillStyle = shadeColor(s.roof, -0.14); ctx.fillRect(cx - 22, cy - 16, 40, 28);
+        ctx.strokeStyle = 'rgba(0,0,0,0.2)'; ctx.lineWidth = 1; ctx.strokeRect(cx - 22, cy - 16, 40, 28);
+        ctx.fillStyle = '#a8b0b6'; ctx.fillRect(cx + 18, cy + 10, 22, 11);
+        ctx.fillStyle = 'rgba(255,255,255,0.25)'; ctx.beginPath(); ctx.arc(cx + 30, cy - 26, 13, 0, Math.PI * 2); ctx.fill();
+        ctx.strokeStyle = 'rgba(0,0,0,0.18)'; ctx.beginPath(); ctx.arc(cx + 30, cy - 26, 13, 0, Math.PI * 2); ctx.stroke();
       }
     }
   }

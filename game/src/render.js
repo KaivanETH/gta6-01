@@ -6,7 +6,7 @@ import { applyCamera, visibleBounds } from './camera.js';
 import { currentLighting, drawLighting } from './lighting.js';
 import { drawGround } from './cityground.js';
 import { drawBuildingShadows, drawElevated } from './buildings.js';
-import { drawVehicle, drawPed, drawHeli, drawHeliShadow } from './sprites.js';
+import { drawVehicle, drawPed, drawHeli, drawHeliShadow, drawPlayerCarMarker } from './sprites.js';
 import { drawMarkers } from './markers.js';
 
 export function renderWorld(ctx, state, view, time) {
@@ -32,6 +32,7 @@ export function renderWorld(ctx, state, view, time) {
   if (!pl.vehicle && !pl.dead) drawPed(ctx, pl, time, true);
   for (const v of state.vehicles) if (v.wrecked && inView(v)) drawVehicle(ctx, v, time);
   for (const v of state.vehicles) if (!v.wrecked && inView(v)) drawVehicle(ctx, v, time);
+  if (pl.vehicle && !pl.vehicle.wrecked) drawPlayerCarMarker(ctx, pl.vehicle, time);
   if (pl.dead && !pl.vehicle) drawPed(ctx, { ...pl, state: 'dead' }, time);
   drawParticles(ctx, state);
   drawElevated(ctx, state, b, time, lit.night);

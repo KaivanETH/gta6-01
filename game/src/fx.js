@@ -27,8 +27,11 @@ export function smoke(state, x, y, dark = false, size = 8) {
   add(state, { type: 'smoke', x, y, vx: rng.range(-15, 15), vy: rng.range(-25, -5), life: rng.range(0.8, 1.6), size, grow: 14, drag: 1, color: dark ? '#2b2b2b' : '#d8d8d8' });
 }
 
-export function tireSmoke(state, x, y) {
-  add(state, { type: 'smoke', x, y, vx: rng.range(-10, 10), vy: rng.range(-10, 10), life: rng.range(0.5, 0.9), size: 6, grow: 22, drag: 1, color: '#eeeeee', alpha: 0.35 });
+// Tyre smoke that scales with how hard the car is sliding (0..1): a hard drift throws a
+// longer, fatter, more opaque cloud than a light chirp.
+export function tireSmoke(state, x, y, slip = 0.5) {
+  const k = Math.max(0, Math.min(1, slip));
+  add(state, { type: 'smoke', x, y, vx: rng.range(-12, 12), vy: rng.range(-12, 12), life: rng.range(0.55, 0.95) + k * 0.5, size: 5 + k * 4, grow: 18 + k * 16, drag: 1, color: '#f4f4f4', alpha: 0.26 + k * 0.22 });
 }
 
 export function fire(state, x, y, size = 10) {
@@ -58,7 +61,7 @@ export function debris(state, x, y, color = '#666', n = 6) {
 }
 
 export function muzzleFlash(state, x, y, a) {
-  add(state, { type: 'flash', x: x + Math.cos(a) * 6, y: y + Math.sin(a) * 6, vx: 0, vy: 0, life: 0.06, size: 12, drag: 0, color: '#fff2a8' });
+  add(state, { type: 'flash', x: x + Math.cos(a) * 6, y: y + Math.sin(a) * 6, vx: 0, vy: 0, life: 0.09, size: 14, drag: 0, color: '#fff2a8' });
 }
 
 export function explosionFx(state, x, y) {
@@ -73,7 +76,7 @@ export function explosionFx(state, x, y) {
 }
 
 export function tracer(state, x1, y1, x2, y2, color = '#fff6c0') {
-  state.tracers.push({ x1, y1, x2, y2, life: 0.07, color });
+  state.tracers.push({ x1, y1, x2, y2, life: 0.11, color });
 }
 
 export function skid(state, x1, y1, x2, y2) {
