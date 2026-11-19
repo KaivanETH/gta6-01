@@ -8,6 +8,8 @@ import { makeRng, pointInRect } from './mathutil.js';
 
 const HASH_CELL = 200;
 
+// District from block coordinates: the waterfront and harbor win first, then downtown,
+// then old town, with the rest falling to the suburbs.
 export function districtOfBlock(bi, bj) {
   if ((bi === 5 || bi === 6) && bj === 3) return 'parque';
   if (bj >= 8 && bi >= 6) return 'muelles';
@@ -377,6 +379,8 @@ function genEdgeGreenery(R, world) {
   }
 }
 
+// Landmarks are placed on block sidewalks and road midpoints rather than at raw coordinates,
+// so each landowner's door sits in a navigable spot whatever the generator did to the lot.
 function placeLandmarks(world) {
   const front = (bi, bj, side = 'n') => {
     const b = blockRect(bi, bj);

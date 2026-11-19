@@ -20,14 +20,20 @@ export function currentLighting(state) {
   return lightingFor(gameHour(state));
 }
 
+// Flat full-screen grade: a cool noon wash so the asphalt and glass read crisp, then the
+// golden-hour amber multiply that turns the city warm before the night layer takes over.
 export function drawLighting(ctx, state, view, lit, bounds, time, applyCam) {
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  if (lit.night < 0.45) {
+    ctx.fillStyle = `rgba(150,185,235,${(1 - lit.night / 0.45) * 0.06})`;
+    ctx.fillRect(0, 0, view.w, view.h);
+  }
   if (lit.golden > 0.02) {
-    ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.globalCompositeOperation = 'multiply';
-    ctx.fillStyle = `rgba(255,150,90,${0.32 * lit.golden})`;
+    ctx.fillStyle = `rgba(255,150,90,${0.30 * lit.golden})`;
     ctx.fillRect(0, 0, view.w, view.h);
     ctx.globalCompositeOperation = 'source-over';
-    ctx.fillStyle = `rgba(255,120,60,${0.07 * lit.golden})`;
+    ctx.fillStyle = `rgba(255,120,60,${0.09 * lit.golden})`;
     ctx.fillRect(0, 0, view.w, view.h);
   }
   const inView = (x, y, m = 120) => x > bounds.x0 - m && x < bounds.x1 + m && y > bounds.y0 - m && y < bounds.y1 + m;
@@ -41,7 +47,12 @@ export function drawLighting(ctx, state, view, lit, bounds, time, applyCam) {
     ctx.globalAlpha = a; ctx.fillStyle = g; ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill();
   };
   if (lit.night > 0.05) for (const p of state.world.props) if (p.type === 'lamp' && inView(p.x, p.y)) glow(p.x, p.y, 46, 'rgba(255,200,120,0.6)', 0.5 * lit.night);
-  if (lit.night > 0.05) for (const s of state.world.buildings) if (s.neon && inView(s.x, s.y, 200)) glow(s.x + s.w / 2, s.y + s.h + 6, 70, s.neon.color, 0.22 * lit.night);
+  if (lit.night > 0.05) for (const s of state.world.buildings) {
+    if (!s.neon || !inView(s.x, s.y, 200)) continue;
+    // the sign throws a broad pool on the pavement and a tight bloom on the sign itself
+    glow(s.x + s.w / 2, s.y + s.h + 26, 118, s.neon.color, 0.2 * lit.night);
+    glow(s.x + s.w / 2, s.y + s.h + 6, 46, s.neon.color, 0.3 * lit.night);
+  }
   const ph = Math.floor(time * 8) % 2;
   for (const v of state.vehicles) {
     if (!inView(v.x, v.y, 100)) continue;

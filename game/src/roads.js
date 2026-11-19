@@ -32,7 +32,8 @@ export function laneSegment(a, b) {
   };
 }
 
-// Traffic lights: each intersection alternates east–west and north–south green.
+// Traffic lights: each intersection alternates east–west and north–south green. Each node gets
+// a deterministic phase offset so a cruise down an avenue hits a green wave, not a red wall.
 const LIGHT_CYCLE = 16;
 export function lightOffset(id) { return ((id * 7919) % 97) / 97 * LIGHT_CYCLE; }
 export function lightState(id, time, horizontal) {
@@ -67,6 +68,7 @@ export function streetNameAt(x, y) {
 }
 
 // Greedy next hop toward a target point (the grid has no holes, so greedy always arrives).
+// Ties break toward the lower node id, which keeps AI routes stable from frame to frame.
 export function nextNodeToward(from, tx, ty, prev = -1) {
   let best = -1, bestD = Infinity;
   for (const n of neighbors(from)) {

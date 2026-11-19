@@ -86,11 +86,11 @@ function drawStatusPanel(ctx, state, W, time) {
   const x = W - 24;
   // dark glass plate under the time, cash and stars so they read over bright rooftops
   ctx.save();
-  ctx.fillStyle = 'rgba(9,7,26,0.42)';
-  rrect(ctx, W - 300, 6, 292, 176, 16); ctx.fill();
-  const sheen = ctx.createLinearGradient(0, 0, 0, 180);
+  ctx.fillStyle = 'rgba(9,7,26,0.5)';
+  rrect(ctx, W - 306, 6, 298, 210, 16); ctx.fill();
+  const sheen = ctx.createLinearGradient(0, 0, 0, 210);
   sheen.addColorStop(0, 'rgba(255,255,255,0.10)'); sheen.addColorStop(1, 'rgba(255,255,255,0)');
-  ctx.fillStyle = sheen; rrect(ctx, W - 300, 6, 292, 176, 16); ctx.fill();
+  ctx.fillStyle = sheen; rrect(ctx, W - 306, 6, 298, 210, 16); ctx.fill();
   ctx.restore();
   const h = gameHour(state);
   const hh = Math.floor(h), mm = Math.floor((h - hh) * 60);
@@ -111,46 +111,54 @@ function drawStatusPanel(ctx, state, W, time) {
     }
     star(ctx, cx, cy, 14 * pop, on ? (blink ? 'rgba(255,201,60,0.4)' : '#ffc93c') : 'rgba(0,0,0,0.4)', on ? '#3a2400' : 'rgba(255,255,255,0.35)');
   }
-  drawWantedState(ctx, state, x - 176, 96, time);
+  // the state pill gets its own full row under the stars: PURSUIT / EVADING / BUSTED
+  drawWantedState(ctx, state, x, 121, time);
   // health / armor
-  bar(ctx, x - 168, 120, 168, 13, pl.health / pl.maxHealth, pl.health < 30 ? '#ff4040' : '#5fd35f');
-  bar(ctx, x - 168, 138, 168, 8, pl.armor / pl.maxArmor, '#4fb3ff');
+  bar(ctx, x - 168, 139, 168, 13, pl.health / pl.maxHealth, pl.health < 30 ? '#ff4040' : '#5fd35f');
+  bar(ctx, x - 168, 157, 168, 8, pl.armor / pl.maxArmor, '#4fb3ff');
   // weapon
   const wpn = WEAPONS[pl.weapon];
   const ammo = wpn.melee ? '' : `  ${pl.ammo[pl.weapon] || 0}`;
-  text(ctx, wpn.name.toUpperCase() + ammo, x, 164, 15, '#ffffff', 'right');
+  text(ctx, wpn.name.toUpperCase() + ammo, x, 186, 15, '#ffffff', 'right');
 }
 
-// Pursuit state beside the stars: a strobing PURSUIT badge with the cruiser count while the
+// Pursuit state under the stars: a strobing PURSUIT badge with the cruiser count while the
 // cops have eyes on you, an EVADING bar that fills toward the next star drop while hidden,
-// and a green EVADED tag for a moment after the chase is shaken.
+// a green EVADED tag for a moment after the chase is shaken, and a blue GETTING BUSTED bar
+// while a cruiser is parked on you. The badge sits on its own row so it never eats the
+// star row, and the row carries the heat ramp (the next star's fill) when the wire is quiet.
 function drawWantedState(ctx, state, right, cy, time) {
   const w = state.wanted;
   if (w.level <= 0) {
     if (w.evaded > 0) {
       ctx.save();
       ctx.globalAlpha = Math.min(1, w.evaded);
-      ctx.fillStyle = 'rgba(18,64,32,0.85)'; rrect(ctx, right - 124, cy - 14, 124, 28, 14); ctx.fill();
+      ctx.fillStyle = 'rgba(18,64,32,0.85)'; rrect(ctx, right - 128, cy - 12, 128, 24, 12); ctx.fill();
       ctx.strokeStyle = 'rgba(140,255,160,0.8)'; ctx.lineWidth = 1.5; ctx.stroke();
-      text(ctx, 'EVADED', right - 62, cy + 1, 14, '#a8ffb2', 'center', 'bold', 0);
+      text(ctx, 'EVADED', right - 64, cy + 1, 14, '#a8ffb2', 'center', 'bold', 0);
       ctx.restore();
     }
     return;
   }
-  const pw = 158, py = cy - 14;
-  if (w.seen) {
+  const pw = 168, py = cy - 12;
+  if (w.bust > 0.05) {
+    const k = Math.min(1, w.bust / bustTime(state));
+    ctx.fillStyle = 'rgba(8,20,52,0.88)'; rrect(ctx, right - pw, py, pw, 24, 12); ctx.fill();
+    ctx.fillStyle = '#3b7bff'; rrect(ctx, right - pw + 2, py + 2, Math.max(26, (pw - 4) * k), 20, 10); ctx.fill();
+    text(ctx, 'GETTING BUSTED', right - pw / 2, cy + 1, 13, '#ffffff', 'center', 'bold', 2);
+  } else if (w.seen) {
     const ph = Math.floor(time * 5) % 2;
     ctx.fillStyle = ph ? 'rgba(196,20,44,0.9)' : 'rgba(32,72,214,0.9)';
-    rrect(ctx, right - pw, py, pw, 28, 14); ctx.fill();
+    rrect(ctx, right - pw, py, pw, 24, 12); ctx.fill();
     ctx.strokeStyle = 'rgba(255,255,255,0.9)'; ctx.lineWidth = 1.6; ctx.stroke();
     const units = w.units || 0;
     text(ctx, `PURSUIT · ${units} UNIT${units === 1 ? '' : 'S'}`, right - pw / 2, cy + 1, 13, '#ffffff', 'center', 'bold', 2);
   } else {
     const k = Math.min(1, (w.unseen || 0) / evadeTime(w.level));
-    ctx.fillStyle = 'rgba(10,8,30,0.8)'; rrect(ctx, right - pw, py, pw, 28, 14); ctx.fill();
+    ctx.fillStyle = 'rgba(10,8,30,0.8)'; rrect(ctx, right - pw, py, pw, 24, 12); ctx.fill();
     const g = ctx.createLinearGradient(right - pw, 0, right, 0);
     g.addColorStop(0, '#ffc93c'); g.addColorStop(1, '#ff8c42');
-    ctx.fillStyle = g; rrect(ctx, right - pw + 2, py + 2, Math.max(24, (pw - 4) * k), 24, 12); ctx.fill();
+    ctx.fillStyle = g; rrect(ctx, right - pw + 2, py + 2, Math.max(24, (pw - 4) * k), 20, 10); ctx.fill();
     text(ctx, `EVADING ${Math.max(0, Math.ceil(evadeTime(w.level) - (w.unseen || 0)))}s`, right - pw / 2, cy + 1, 13, '#ffffff', 'center', 'bold', 2);
   }
 }
@@ -200,14 +208,20 @@ function drawMissionPanel(ctx, state, time) {
 
 function drawLocation(ctx, state, x, y) {
   const d = DISTRICTS[state.lastDistrict] || DISTRICTS.centro;
-  text(ctx, (state.streetName || '').toUpperCase(), x, y, 13, '#ffffff', 'left', 'bold', 3);
-  text(ctx, d.name, x, y - 18, 15, '#ffc93c', 'left', 'bold', 3);
+  // a small glass plate keeps the district and street readable over bright pavements,
+  // sand and glass roofs; sized to the district name so it never overhangs the minimap
+  ctx.font = `bold 15px ${FONT}`;
+  const w = Math.max(ctx.measureText(d.name).width, 108) + 20;
+  ctx.fillStyle = 'rgba(9,7,26,0.5)';
+  rrect(ctx, x - 8, y - 32, w, 44, 9); ctx.fill();
+  text(ctx, (state.streetName || '').toUpperCase(), x, y + 1, 12, '#ffffff', 'left', 'bold', 2);
+  text(ctx, d.name, x, y - 16, 15, '#ffc93c', 'left', 'bold', 2);
   if (state.districtToast) {
     const t = state.districtToast;
     const a = Math.min(1, t.life, (t.max - t.life) * 3);
     ctx.globalAlpha = Math.max(0, a);
-    text(ctx, t.name.toUpperCase(), x, y - 64, 30, '#ffffff', 'left', 'bold', 5);
-    text(ctx, t.tag, x + 2, y - 40, 15, '#ffc93c', 'left', 'bold', 3);
+    text(ctx, t.name.toUpperCase(), x, y - 70, 30, '#ffffff', 'left', 'bold', 5);
+    text(ctx, t.tag, x + 2, y - 46, 15, '#ffc93c', 'left', 'bold', 3);
     ctx.globalAlpha = 1;
   }
 }
@@ -278,7 +292,8 @@ function drawObjectiveArrow(ctx, state, view, time) {
 }
 
 function drawToasts(ctx, state, W) {
-  let y = 190;
+  // clear the status plate (to 216) so a toast never lands on the weapon line
+  let y = 236;
   for (const t of state.toasts) {
     const a = Math.min(1, t.life * 2);
     ctx.globalAlpha = a;

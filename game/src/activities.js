@@ -57,6 +57,8 @@ export function updateActivities(state, dt) {
   }
   a.timer -= dt;
   if (a.timer <= 0) return cancelFare(state, 'Too slow! The passenger stormed out');
+  // the meter runs down; the HUD already flashes the last fifteen seconds in red
+
   if (dist2(a.to.x, a.to.y, v.x, v.y) < 80 * 80 && Math.hypot(v.vx, v.vy) < 45) {
     const tip = Math.round(a.timer * 3);
     state.cash += a.fare + tip;
@@ -90,7 +92,7 @@ export function activityPanel(state) {
   if (!a) return null;
   return {
     title: 'TAXI DORADO — FARES',
-    objective: a.phase === 'pickup' ? 'Pick up the waiting passenger' : `Drive the passenger to the drop-off (${formatMoney(a.fare)})`,
+    objective: a.phase === 'pickup' ? 'Pick up the waiting passenger — pull up and stop' : `Drive the passenger to the drop-off (${formatMoney(a.fare)} fare)`,
     timer: a.phase === 'dropoff' ? a.timer : null,
   };
 }

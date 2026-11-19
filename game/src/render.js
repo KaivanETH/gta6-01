@@ -1,5 +1,6 @@
 // Frame composer: draws the world in layers — ground, shadows, skid marks, pickups, markers,
 // pedestrians, vehicles, particles, the leaning buildings/props, helicopter, then lighting.
+// Depth order matters: ground fx under wheels, airborne particles over roofs, lighting last.
 import { drawPickups } from './pickups.js';
 import { drawGroundFx, drawParticles } from './fx.js';
 import { applyCamera, visibleBounds } from './camera.js';
@@ -25,6 +26,8 @@ export function renderWorld(ctx, state, view, time) {
   drawMarkers(ctx, state, time, b);
   if (state.heli) drawHeliShadow(ctx, state.heli);
 
+  // one shared culling predicate for entities: if a thing's centre is outside the visible
+  // bounds by its margin, skip its draw call entirely
   const inView = (o, m = 60) => o.x > b.x0 - m && o.x < b.x1 + m && o.y > b.y0 - m && o.y < b.y1 + m;
   for (const p of state.peds) if (p.state === 'dead' && inView(p)) drawPed(ctx, p, time);
   for (const p of state.peds) if (p.state !== 'dead' && inView(p)) drawPed(ctx, p, time);

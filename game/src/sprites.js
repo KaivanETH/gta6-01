@@ -19,11 +19,14 @@ export function drawVehicle(ctx, v, time) {
   const hl = L / 2, hw = W / 2;
   ctx.save();
   ctx.translate(v.x, v.y);
-  // shadow
+  // shadow: a soft two-layer blob offset down-right so every car sits on the tarmac
   ctx.save();
-  ctx.translate(4, 5);
+  ctx.translate(5, 6);
   ctx.rotate(v.a);
-  ctx.fillStyle = 'rgba(15,10,35,0.32)';
+  ctx.fillStyle = 'rgba(15,10,35,0.14)';
+  rrect(ctx, -hl - 4, -hw - 4, L + 8, W + 8, 10);
+  ctx.fill();
+  ctx.fillStyle = 'rgba(15,10,35,0.3)';
   rrect(ctx, -hl - 1, -hw - 1, L + 2, W + 2, 7);
   ctx.fill();
   ctx.restore();
@@ -134,7 +137,9 @@ export function drawPed(ctx, p, time, isPlayer = false) {
     ctx.restore();
     return;
   }
-  // shadow
+  // shadow: a wide soft blob plus a tighter core, so peds stay grounded on bright pavements
+  ctx.fillStyle = 'rgba(15,10,35,0.14)';
+  ctx.beginPath(); ctx.ellipse(4, 5, 10, 8, 0, 0, Math.PI * 2); ctx.fill();
   ctx.fillStyle = 'rgba(15,10,35,0.3)';
   ctx.beginPath(); ctx.ellipse(3, 4, 8, 6, 0, 0, Math.PI * 2); ctx.fill();
   if (isPlayer) {

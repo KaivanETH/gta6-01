@@ -46,8 +46,11 @@ export function loadGame(state) {
   if (!s) return false;
   let d;
   try { d = JSON.parse(s.getItem(SAVE_KEY)); } catch { return false; }
-  if (!d) return false;
-  state.cash = d.cash; state.clock = d.clock; state.radio = d.radio || 0;
+  // a hand-edited or half-written save must not half-load the game: validate the shape first
+  if (!d || !d.player || typeof d.player.x !== 'number' || typeof d.player.y !== 'number') return false;
+  state.cash = Number.isFinite(d.cash) ? d.cash : 350;
+  state.clock = Number.isFinite(d.clock) ? d.clock : state.clock;
+  state.radio = d.radio || 0;
   state.story = { ...d.story, introSeen: true };
   state.properties = d.properties; state.stats = { ...state.stats, ...d.stats };
   const pl = state.player;

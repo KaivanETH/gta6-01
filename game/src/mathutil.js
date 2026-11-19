@@ -69,6 +69,8 @@ export function rayCircle(ox, oy, dx, dy, cx, cy, r) {
   return t >= 0 ? t : (c < 0 ? 0 : -1);
 }
 
+// Money formatting used by the HUD, shop and menus: whole dollars, grouped thousands,
+// always with the leading $ so it never reads as a raw number.
 export function shadeColor(hex, amt) {
   const n = parseInt(hex.slice(1), 16);
   let r = (n >> 16) & 255, g = (n >> 8) & 255, b = n & 255;

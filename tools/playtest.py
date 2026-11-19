@@ -4,10 +4,14 @@ Opens the game served by `node serve.ts`, records every console error and page e
 drives it with scripted keyboard/mouse input and saves screenshots.
 
 usage: python3 tools/playtest.py <mode> [out_dir]
-  modes: smoke   — title screen, new game, skip intro, walk, steal a car, drive (≈40 s)
-         long    — ≥3 minutes of scripted play: driving, carjacking, combat, wanted chase,
-                   the first missions, pause menu save/load
-         shots   — stage the press screenshots via ?scene=… presets
+  modes: smoke    — title screen, new game, skip intro, walk, steal a car, drive (≈40 s)
+         long     — ≥3 minutes of scripted play: driving, carjacking, combat, wanted chase,
+                    the first missions, pause menu save/load
+         missions — walk every story mission from giver to payout and check the credits
+         shots    — stage the press screenshots via ?scene=… presets
+
+The exit code is 1 when the browser logged any console error or page error, so a green run
+means "played for the scripted duration with a clean console".
 """
 import json
 import sys

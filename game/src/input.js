@@ -9,8 +9,10 @@ export function initInput(canvas, firstGesture) {
   onFirstGesture = firstGesture;
   const gesture = () => { if (onFirstGesture) { const f = onFirstGesture; onFirstGesture = null; f(); } };
   window.addEventListener('keydown', (e) => {
+    // arrows, Space and Tab drive the game, so stop them scrolling or moving focus
     if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Space', 'Tab'].includes(e.code)) e.preventDefault();
-    if (!held.has(e.code)) pressed.add(e.code);
+    // a repeating keydown from the OS must not count as a fresh press: menus would race
+    if (!e.repeat && !held.has(e.code)) pressed.add(e.code);
     held.add(e.code);
     gesture();
   });

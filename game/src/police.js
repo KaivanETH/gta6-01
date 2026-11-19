@@ -209,6 +209,7 @@ export function driveCop(state, v, dt) {
   if (ai.reverse > 0) { ai.reverse -= dt; v.throttle = -1; v.steer = 0; v.handbrake = false; return; }
 
   const lvl = state.wanted.level;
+  const w = state.wanted;
   const tune = PURSUIT[Math.max(1, lvl)] || PURSUIT[1];
   let tx, ty, target = tune.speed || 400;
   const los = d < 300 + lvl * 30 && lineOfSight(state.world, v.x, v.y, pp.x, pp.y);
@@ -232,15 +233,21 @@ export function driveCop(state, v, dt) {
       return;
     }
   } else {
+    // No eyes on the suspect: sweep toward the last place the player was seen (not the live
+    // position), then keep circling that block. That gives the EVADING bar a real way to fill.
+    const stale = w.unseen > 1.2;
+    const sx = (w.lastX || pp.x), sy = (w.lastY || pp.y);
     const here = nearestNode(v.x, v.y);
     const hp = nodePos(here);
     if (ai.node === undefined || dist2(v.x, v.y, nodePos(ai.node).x, nodePos(ai.node).y) < 60 * 60) {
       const from = dist2(v.x, v.y, hp.x, hp.y) < 80 * 80 ? here : ai.node;
-      const nxt = nextNodeToward(from, pp.x, pp.y, ai.prev);
+      const gx = stale ? sx : pp.x, gy = stale ? sy : pp.y;
+      const nxt = nextNodeToward(from, gx, gy, ai.prev);
       ai.prev = from; ai.node = nxt;
     }
     const np = nodePos(ai.node);
     tx = np.x; ty = np.y;
+    if (stale && dist2(v.x, v.y, sx, sy) < 220 * 220) target = Math.min(target, 210);
   }
   const desired = Math.atan2(ty - v.y, tx - v.x);
   const err = wrapAngle(desired - v.a);

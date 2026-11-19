@@ -21,6 +21,8 @@ export function placeGoldenShells(state) {
   state.shells = spots.map((s, i) => ({ ...s, id: i, taken: state.shellsTaken ? state.shellsTaken.includes(i) : false }));
 }
 
+// Cash bags, ammo, health and armor packs: a wide soft halo under each pickup so loot is
+// visible at a glance on the tarmac without cluttering the scene with text.
 export function updatePickups(state, dt) {
   const pl = state.player;
   const px = pl.vehicle ? pl.vehicle.x : pl.x, py = pl.vehicle ? pl.vehicle.y : pl.y;
@@ -56,6 +58,8 @@ export function drawPickups(ctx, state, time) {
     if (k.type === 'cash') {
       ctx.fillStyle = '#3fae49'; ctx.fillRect(k.x - 7, k.y - 4 + bob, 14, 8);
       ctx.fillStyle = '#b8f5a0'; ctx.fillRect(k.x - 2, k.y - 2 + bob, 4, 4);
+      ctx.strokeStyle = 'rgba(255,255,255,0.7)'; ctx.lineWidth = 1;
+      ctx.strokeRect(k.x - 7.5, k.y - 4.5 + bob, 15, 9);
     } else if (k.type === 'ammo') {
       ctx.fillStyle = '#c99a2e'; ctx.fillRect(k.x - 6, k.y - 5 + bob, 12, 10);
       ctx.fillStyle = '#5a3f0e'; ctx.fillRect(k.x - 4, k.y - 3 + bob, 8, 2);

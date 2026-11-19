@@ -45,7 +45,10 @@ const builders = {
   },
   plaza(g) {
     noise(g, 48, 48, '#ddd6c8', 0.04, 200);
-    g.strokeStyle = 'rgba(120,110,100,0.25)';
+    // a light inset border on each slab catches the light better than flat grid lines
+    g.strokeStyle = 'rgba(255,255,255,0.28)';
+    for (let y = 0; y < 48; y += 16) for (let x = 0; x < 48; x += 16) g.strokeRect(x + 1.5, y + 1.5, 13, 13);
+    g.strokeStyle = 'rgba(120,110,100,0.3)';
     for (let i = 0; i <= 48; i += 16) { g.beginPath(); g.moveTo(i + 0.5, 0); g.lineTo(i + 0.5, 48); g.moveTo(0, i + 0.5); g.lineTo(48, i + 0.5); g.stroke(); }
   },
   resort(g) {

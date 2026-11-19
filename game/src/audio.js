@@ -127,11 +127,14 @@ function buildSiren() {
   o.start(); lfo.start();
   siren = { o, lfo, g };
 }
+// Siren: loudness grows as the nearest cruiser closes, and at 3+ stars the wail cycles
+// faster so a hot pursuit is audibly more urgent than a single patrol car a street away.
 export function updateSiren(intensity, fast) {
   if (!siren) return;
   const t = ac.currentTime;
-  siren.g.gain.setTargetAtTime(Math.min(0.09, intensity * 0.09), t, 0.15);
+  siren.g.gain.setTargetAtTime(Math.min(0.1, intensity * 0.1), t, 0.15);
   siren.lfo.frequency.setTargetAtTime(fast ? 3.2 : 0.9, t, 0.3);
+  siren.o.frequency.setTargetAtTime(fast ? 820 : 700, t, 0.4);
 }
 
 function buildScreech() {

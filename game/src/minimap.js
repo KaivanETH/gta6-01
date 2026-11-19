@@ -1,6 +1,7 @@
 // Minimap (fixed north) and full-screen city map: a pre-rendered overview of districts,
 // roads, water and buildings, with blips for the player, mission targets, police, the
-// helicopter, vehicles, shops/properties and Golden Shells.
+// helicopter, vehicles, shops/properties and Golden Shells. Blips are drawn in screen space
+// after the map image, so every marker stays a consistent size at any zoom.
 import { WORLD_W, WORLD_H, NODES_X, NODES_Y, ROAD_HALF, nodeX, nodeY, DISTRICTS, COAST_X, HARBOR_Y } from './config.js';
 import { isWater } from './world.js';
 import { rrect } from './sprites.js';
@@ -102,10 +103,12 @@ export function drawMinimap(ctx, state, x, y, size, time) {
   if (state.heli) { const q = toMap(state.heli.x, state.heli.y); if (inside(q)) iconBlip(ctx, q.x, q.y, '#1f3a8a', 'H'); }
   // shells
   if (state.shells) for (const s of state.shells) if (!s.taken) { const q = toMap(s.x, s.y); if (inside(q)) blip(ctx, q.x, q.y, 2.5, '#ffd34d'); }
-  // markers: mission targets get a sonar ring so the objective is unmistakable
+  // markers: mission targets get a sonar ring; the active objective additionally carries a
+  // short "OBJECTIVE" tag (or "OFF-SCREEN" when clamped to the edge) so it is unmistakable
   for (const m of state.markers || []) {
     let q = toMap(m.x, m.y);
-    if (!inside(q)) { if (!m.mission) continue; q = clampEdge(q); }
+    const wasInside = inside(q);
+    if (!wasInside) { if (!m.mission) continue; q = clampEdge(q); }
     if (m.mission) {
       const t = time * 0.9 % 1;
       ctx.strokeStyle = m.color; ctx.globalAlpha = 1 - t; ctx.lineWidth = 2;
@@ -113,6 +116,14 @@ export function drawMinimap(ctx, state, x, y, size, time) {
       ctx.globalAlpha = 0.25; ctx.fillStyle = m.color;
       ctx.beginPath(); ctx.arc(q.x, q.y, 13, 0, Math.PI * 2); ctx.fill();
       ctx.globalAlpha = 1;
+      if (state.mission) {
+        const text = wasInside ? 'OBJECTIVE' : 'OFF-SCREEN';
+        ctx.font = 'bold 8px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        const w = ctx.measureText(text).width + 6;
+        const ty = q.y - 13;
+        ctx.fillStyle = 'rgba(6,4,20,0.78)'; ctx.fillRect(q.x - w / 2, ty - 5, w, 10);
+        ctx.fillStyle = '#ffffff'; ctx.fillText(text, q.x, ty);
+      }
     }
     iconBlip(ctx, q.x, q.y, m.color, m.icon || '!');
   }

@@ -1,7 +1,7 @@
 // Civilian traffic AI: lane following with pure-pursuit steering, turns at intersections,
 // stopping for red lights, braking for cars/peds/the player, honking, panic driving and
 // spawning/despawning cars on lanes around the player. Also seeds the parked cars.
-import { TRAFFIC_MIX, TRAFFIC_TARGET } from './config.js';
+import { TRAFFIC_MIX, TRAFFIC_TARGET, SIREN_YIELD_RADIUS } from './config.js';
 import { createVehicle, forwardSpeed } from './vehicles.js';
 import { randomLook } from './peds.js';
 import { laneSegment, chooseNextNode, randomEdgeNear, lightState, nodePos, nearestNode, neighbors } from './roads.js';
@@ -129,6 +129,13 @@ export function driveTraffic(state, v, dt) {
   if (ai.panic <= 0 && distToEnd < 90 && distToEnd > 4 && proj.t > 0.4) {
     const light = lightState(ai.b, state.time, seg.dy === 0);
     if (light !== 'green' && !(light === 'yellow' && distToEnd < 30)) target = Math.min(target, Math.max(0, (distToEnd - 6) * 2.4));
+  }
+  // A hot pursuit makes civilian drivers pull over and crawl: the city visibly gives way
+  // to the chase, which reads on screen as life rather than a static road network.
+  if (state.wanted.level >= 3 && state.wanted.seen && ai.panic <= 0) {
+    const pl = state.player;
+    const me = pl.vehicle || pl;
+    if (dist2(v.x, v.y, me.x, me.y) < SIREN_YIELD_RADIUS * SIREN_YIELD_RADIUS) target = Math.min(target, 90);
   }
   const ob = obstacleAhead(state, v, 110);
   if (ob.gap < 110) target = Math.min(target, Math.max(0, (ob.gap - 12) * 2.6));

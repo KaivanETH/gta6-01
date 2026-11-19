@@ -31,7 +31,7 @@ export function smoke(state, x, y, dark = false, size = 8) {
 // longer, fatter, more opaque cloud than a light chirp.
 export function tireSmoke(state, x, y, slip = 0.5) {
   const k = Math.max(0, Math.min(1, slip));
-  add(state, { type: 'smoke', x, y, vx: rng.range(-12, 12), vy: rng.range(-12, 12), life: rng.range(0.55, 0.95) + k * 0.5, size: 5 + k * 4, grow: 18 + k * 16, drag: 1, color: '#f4f4f4', alpha: 0.26 + k * 0.22 });
+  add(state, { type: 'smoke', x, y, vx: rng.range(-14, 14), vy: rng.range(-14, 14), life: rng.range(0.5, 0.85) + k * 0.4, size: 5 + k * 4, grow: 17 + k * 12, drag: 1, color: '#f6f6f6', alpha: 0.22 + k * 0.2 });
 }
 
 export function fire(state, x, y, size = 10) {
@@ -116,9 +116,18 @@ export function updateFx(state, dt) {
 // Ground-level marks: skids, blood, scorch. Drawn under vehicles.
 export function drawGroundFx(ctx, state) {
   ctx.lineCap = 'round';
-  ctx.lineWidth = 4;
+  // two passes per mark: a wide soft rubber halo and a dark core, so a drift reads on the
+  // mid-grey asphalt from the far camera instead of vanishing into it
   for (const s of state.skids) {
-    ctx.strokeStyle = `rgba(25,25,25,${Math.min(0.45, s.life / 22 * 0.45)})`;
+    const a = Math.min(1, s.life / 22);
+    ctx.lineWidth = 7;
+    ctx.strokeStyle = `rgba(18,16,22,${0.2 * a})`;
+    ctx.beginPath(); ctx.moveTo(s.x1, s.y1); ctx.lineTo(s.x2, s.y2); ctx.stroke();
+  }
+  ctx.lineWidth = 3.5;
+  for (const s of state.skids) {
+    const a = Math.min(1, s.life / 22);
+    ctx.strokeStyle = `rgba(16,14,20,${0.62 * a})`;
     ctx.beginPath(); ctx.moveTo(s.x1, s.y1); ctx.lineTo(s.x2, s.y2); ctx.stroke();
   }
   for (const d of state.decals) {
@@ -142,10 +151,16 @@ export function drawParticles(ctx, state) {
         ctx.strokeStyle = p.color; ctx.lineWidth = p.size; ctx.globalAlpha = k;
         ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(p.x - p.vx * 0.03, p.y - p.vy * 0.03); ctx.stroke();
         break;
-      case 'smoke':
-        ctx.globalAlpha = (p.alpha || 0.55) * k; ctx.fillStyle = p.color;
+      case 'smoke': {
+        // soft radial puff: a hard-edged circle reads as a grey ball at this camera distance,
+        // a falloff to transparent reads as smoke volume
+        ctx.globalAlpha = (p.alpha || 0.55) * k;
+        const sg = ctx.createRadialGradient(p.x, p.y, p.size * 0.15, p.x, p.y, p.size);
+        sg.addColorStop(0, p.color); sg.addColorStop(1, 'rgba(244,244,244,0)');
+        ctx.fillStyle = sg;
         ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2); ctx.fill();
         break;
+      }
       case 'fire':
         ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = k; ctx.fillStyle = p.color;
         ctx.beginPath(); ctx.arc(p.x, p.y, Math.max(1, p.size * k), 0, Math.PI * 2); ctx.fill();

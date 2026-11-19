@@ -104,6 +104,9 @@ export const START_HOUR = 10.5;
 export const TRAFFIC_TARGET = { night: 34, commute: 118, evening: 96 };
 export const PED_TARGET = { night: 56, day: 140 };
 export const COP_EXTRA_FILL = 2;     // cruisers added straight away when a chase begins
+// Traffic reacts to a hot pursuit inside this radius (pulls over and crawls), so the city
+// visibly makes room for the chase instead of driving through it.
+export const SIREN_YIELD_RADIUS = 520;
 
 
 // ---- Economy ---------------------------------------------------------------------

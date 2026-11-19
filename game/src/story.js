@@ -10,6 +10,7 @@ export const CAST = {
   radio:  { name: 'Police Radio', color: '#7fb3ff' },
 };
 
+// The opening crawl is read one line at a time in the intro cinematic, four seconds each.
 export const INTRO_CRAWL = [
   'BAHÍA DORADA — the golden bay. Sun, salt, and money that never sleeps.',
   'Eight years ago, Marisol "Sol" Ortega drove the getaway car on a docks job that went wrong.',
@@ -38,7 +39,7 @@ export const MISSIONS = [
   },
   {
     id: 'wheels', title: 'Ruedas Nuevas', giver: 'cafe', giverName: 'Tío Ramón', reward: 1200,
-    summary: 'Steal a Rayo GT from a Las Lomas driveway and bring it to Lupe\'s garage.',
+    summary: 'Steal a Rayo GT from a Las Lomas driveway and bring it to Lupe\'s garage before the clock runs out.',
     steps: [
       { type: 'dialog', lines: [['ramon', 'A dentist in Las Lomas parks a Rayo GT on his lawn like a trophy.'], ['ramon', 'Lupe at Garaje Solera has a buyer. Bring it in clean.']] },
       { type: 'spawnVehicle', tag: 'rayo', vtype: 'sports', at: { block: [1, 3], dx: 30, dy: 0 }, a: Math.PI / 2, color: '#ff9f1c' },

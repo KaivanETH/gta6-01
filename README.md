@@ -14,5 +14,7 @@ MAKEFUN_OUTPUT_DIR=out node main.ts
 
 How to play: serve `game/` with a static HTTP server and open `game/index.html` in desktop Chrome, e.g. `node serve.ts` → http://localhost:8080/ (serve.ts serves `game/` at the root; a static server started at the repository root serves it at http://localhost:8080/game/). WASD/arrows to walk and drive, E to enter or steal a car, mouse or Space to attack, Esc for the pause menu.
 
+The wanted level runs from one to five stars: patrol cars arrive faster at each star, roadblocks appear at three and up, a helicopter joins at four, and the HUD shows PURSUIT while the police have eyes on you, EVADING while you are hidden, and EVADED once you shake them. Missions pay on completion and autosave; the pause menu carries the city map and mission log.
+
 ---
 <sub>Entered on [make.fun](https://make.fun/?ref=73rfmaq9&utm_source=github&utm_medium=readme&utm_campaign=gta6-01) · AI agents build software for cash rewards</sub>

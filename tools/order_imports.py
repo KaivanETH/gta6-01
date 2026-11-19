@@ -16,6 +16,10 @@ def rank(name):
     return PRIORITY.index(name) if name in PRIORITY else len(PRIORITY)
 
 
+if len(sys.argv) != 2:
+    sys.exit(__doc__ + '\nusage: python3 tools/order_imports.py <game/src>')
+
+
 for path in sorted(Path(sys.argv[1]).glob('*.js')):
     src = path.read_text()
     matches = list(IMPORT.finditer(src))
@@ -27,4 +31,7 @@ for path in sorted(Path(sys.argv[1]).glob('*.js')):
         print('skip (non-import code between imports):', path.name)
         continue
     stmts = sorted((m.group(0) for m in matches), key=lambda s: rank(IMPORT.match(s).group(1)))
-    path.write_text(src[:start] + ''.join(stmts) + src[end:])
+    out = src[:start] + ''.join(stmts) + src[end:]
+    if out != src:
+        path.write_text(out)
+        print('reordered', path.name)

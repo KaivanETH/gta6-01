@@ -14,7 +14,9 @@ export function updateCamera(state, dt, view) {
   }
   const pl = state.player;
   const tgt = pl.vehicle || pl;
-  let lx = 0, ly = 0, zoom = 1.12;
+  // On foot the camera sits a little wider so the sidewalk crowd, shopfronts and the
+  // minimap all breathe; in a car it tightens down to the lane.
+  let lx = 0, ly = 0, zoom = 1.16;
   if (pl.vehicle) {
     const v = pl.vehicle;
     // In a hot pursuit the camera stops leaning so far ahead, which keeps the cruisers on
@@ -28,7 +30,6 @@ export function updateCamera(state, dt, view) {
   } else {
     lx = pl.vx * 0.3; ly = pl.vy * 0.3;
   }
-  if (state.wanted.level >= 3 && pl.vehicle) zoom -= 0.03;
   cam.targetZoom = zoom * (view.zoomScale || 1);
   const k = 1 - Math.exp(-dt * 4.5);
   cam.lookX = lerp(cam.lookX || 0, lx, 1 - Math.exp(-dt * 1.8));

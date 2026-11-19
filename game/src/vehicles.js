@@ -77,6 +77,11 @@ export function stepVehicle(state, v, dt) {
   v.x += v.vx * dt;
   v.y += v.vy * dt;
   collideWorld(state, v);
+  // leave the collision handler's tyre smoke on the tarmac instead of cutting it off
+  if (v.lastImpact && v.lastImpact > 0) {
+    v.lastImpact -= dt;
+    if (rng.chance(dt * 12)) tireSmoke(state, v.x + rng.range(-8, 8), v.y + rng.range(-8, 8), 0.4);
+  }
   if (Math.abs(v.vx) + Math.abs(v.vy) < 1 && !v.driver) v.sleeping = true;
 }
 
@@ -157,6 +162,7 @@ function collideWorld(state, v) {
 function onImpact(state, v, impact, x, y) {
   if (v.hitCd > 0) return;
   v.hitCd = 0.25;
+  v.lastImpact = 0.45;
   const dmg = Math.max(0, (impact - 70) * 0.075);
   damageVehicle(state, v, dmg, null);
   sparks(state, x, y, Math.min(16, 4 + impact / 30));
@@ -179,6 +185,8 @@ function updateDamage(state, v, dt) {
   if (v.wrecked) { if (rng.chance(dt * 3)) smoke(state, v.x, v.y, true, 7); return; }
   const hp = v.health / v.maxHealth;
   if (hp < 0.45 && rng.chance(dt * (hp < 0.25 ? 14 : 5))) smoke(state, v.x + Math.cos(v.a) * v.spec.len * 0.35, v.y + Math.sin(v.a) * v.spec.len * 0.35, hp < 0.25, 6);
+  // a badly battered car sheds glass and paint chips as it rolls, so damage is visible in motion
+  if (hp < 0.35 && !v.wrecked && rng.chance(dt * 1.6)) debris(state, v.x, v.y, '#c9b79a', 3);
   if (v.onFire) {
     v.fireT -= dt;
     if (rng.chance(dt * 30)) fire(state, v.x + Math.cos(v.a) * v.spec.len * 0.3, v.y + Math.sin(v.a) * v.spec.len * 0.3, 9);

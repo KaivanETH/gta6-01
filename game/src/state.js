@@ -33,6 +33,7 @@ export function createGameState(world) {
     respawnTimer: 0, deathKind: null,
     trafficCd: 0, pedCd: 0, clubIncomeHour: Math.floor(START_HOUR),
     radio: 0,
+    menuStack: [],
     debug: false,
   };
 }
@@ -41,7 +42,11 @@ export function gameHour(state) {
   return (state.clock / SECONDS_PER_HOUR) % 24;
 }
 
+// Small transient line in the top-right stack. Doubling the same line refreshes it instead
+// of stacking two identical toasts, which keeps a busy chase from flooding the corner.
 export function toast(state, text, color = '#fff', life = 3.2) {
+  const same = state.toasts.find((t) => t.text === text);
+  if (same) { same.life = Math.max(same.life, life); same.max = Math.max(same.max, life); return; }
   state.toasts.push({ text, color, life, max: life });
   if (state.toasts.length > 5) state.toasts.shift();
 }

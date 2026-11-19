@@ -98,7 +98,8 @@ export function scarePeds(state, x, y, radius, byPlayer = true) {
     if (p.role !== 'civ' || p.state === 'dead' || p.state === 'down') continue;
     if (dist2(p.x, p.y, x, y) > r2) continue;
     if (p.armed && byPlayer && state.wanted.level >= 3 && rng.chance(0.5)) { p.hostile = true; p.state = 'fight'; p.panic = 8; continue; }
-    if (p.state !== 'flee' && rng.chance(0.3)) sfx.scream(volAt(state, p.x, p.y) * 0.6);
+    // one scream per runner per scare, not a chorus: keep the crowd audio legible
+    if (p.state !== 'flee' && rng.chance(0.22)) sfx.scream(volAt(state, p.x, p.y) * 0.55);
     p.state = 'flee'; p.panic = rng.range(4, 8); p.fearX = x; p.fearY = y;
   }
 }
@@ -220,7 +221,8 @@ function updateCiv(state, p, dt) {
     case 'flee': {
       p.panic -= dt;
       const dx = p.x - p.fearX, dy = p.y - p.fearY, d = Math.hypot(dx, dy) || 1;
-      steerTo(p, p.x + dx / d * 100 + rng.range(-20, 20), p.y + dy / d * 100 + rng.range(-20, 20), 120, dt, 5);
+      // panicked runners push a little harder than a normal walk, and shove each other aside
+      steerTo(p, p.x + dx / d * 100 + rng.range(-20, 20), p.y + dy / d * 100 + rng.range(-20, 20), 138, dt, 6);
       if (p.panic <= 0) resumeWalking(p);
       break;
     }

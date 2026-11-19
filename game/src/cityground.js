@@ -28,11 +28,16 @@ export function drawGround(ctx, state, b, time) {
     if (b.y1 > HARBOR_Y - 40) ctx.fillRect(b.x0 - 20, HARBOR_Y - 20, b.x1 - b.x0 + 40, WORLD_H - HARBOR_Y + 120);
     ctx.restore();
   }
-  // beach sand + shoreline
+  // beach sand + shoreline: a wet-sand band under the surf line keeps the coast readable
   const beach = w.beach;
   if (visible(beach, b)) {
     ctx.fillStyle = pattern(ctx, 'sand');
     ctx.fillRect(beach.x, Math.max(b.y0, beach.y), beach.w + 30, Math.min(b.y1, HARBOR_Y) - Math.max(b.y0, beach.y));
+    ctx.save();
+    ctx.globalAlpha = 0.5;
+    ctx.fillStyle = PALETTE.sandWet;
+    ctx.fillRect(beach.x + beach.w - 34, Math.max(b.y0, beach.y), 34, Math.min(b.y1, HARBOR_Y) - Math.max(b.y0, beach.y));
+    ctx.restore();
     drawShore(ctx, b, time);
   }
   if (w.eastDock && visible(w.eastDock, b)) {

@@ -6,6 +6,9 @@ and then captures it. Nothing is drawn on top: the images are the game's own can
 
 usage:  python3 tools/stage.py <cover|city|mission|title|all> [out_dir]
 Needs the game on http://localhost:8080/ (node serve.ts).
+
+Every frame is captured as JPEG at quality 88 and stepped down only if the file passes the
+entry's 256 KiB cap. The cover is the first file by name, so 1-chase.jpg sorts first.
 """
 import json
 import os
@@ -127,13 +130,15 @@ INFO = """() => {
   const near = cops.filter((o) => Math.hypot(o.x - me.x, o.y - me.y) < 420 && inFrame(o)).length;
   const smoke = s.particles.filter((p) => p.type === 'smoke' && Math.hypot(p.x - me.x, p.y - me.y) < 320).length;
   const blocked = s.vehicles.filter((o) => { if (o === pl.vehicle) return false; const r = rel(o); return r.along > 20 && r.along < 210 && r.lat < 40; }).length;
-  const overlap = s.vehicles.filter((o) => o !== pl.vehicle && o !== pl && o.x && Math.hypot(o.x - me.x, o.y - me.y) < 62).length;
+  const overlap = s.vehicles.filter((o) => { if (o === pl.vehicle || o === pl || !o.x) return false; const dx = o.x - me.x, dy = o.y - me.y; const lf = dx * Math.cos(me.a) + dy * Math.sin(me.a), lr = Math.abs(-dx * Math.sin(me.a) + dy * Math.cos(me.a)); return Math.abs(lf) < 54 && lr < 34; }).length;
+  const tail = cops.map((o) => rel(o)).filter((r) => r.along < -40 && r.along > -420 && r.lat < 90).map((r) => -r.along);
+  const tailGap = tail.length ? Math.min(...tail) : 999;
   return {
     mode: s.mode, wanted: s.wanted.level, seen: s.wanted.seen, units: s.wanted.units, inCar: !!pl.vehicle,
     car: pl.vehicle && pl.vehicle.type, speed: Math.round(Math.hypot(pl.vehicle ? pl.vehicle.vx : pl.vx, pl.vehicle ? pl.vehicle.vy : pl.vy)),
     carHp: pl.vehicle ? +(pl.vehicle.health / pl.vehicle.maxHealth).toFixed(2) : 0,
     flash: pl.vehicle ? +(pl.vehicle.flash || 0).toFixed(2) : 0,
-    cops: cops.length, copsSee: near, behind, smoke, blocked, overlap,
+    cops: cops.length, copsSee: near, behind, smoke, blocked, overlap, tailGap: Math.round(tailGap),
     traffic: s.vehicles.filter((o) => o.driver && o.driver !== 'player' && o.role !== 'cop' && inFrame(o)).length,
     peds: s.peds.filter((p) => p.state !== 'dead' && inFrame(p)).length,
     mission: s.mission && s.mission.def.title, objective: s.mission && s.mission.objective,
@@ -249,58 +254,61 @@ def drive(page, heading, index, seconds=0, gas=330, dry=False):
 
 def cover(page, out):
     # The chase photo scene sets the pose (four stars, a cruiser pack on the bumper, the
-    # helicopter up); from there the car is driven at full throttle with real key events,
-    # with short handbrake flicks for tyre smoke, and the frame is taken once it all lines up.
-    boot(page, '?scene=chase', 4.0)
-    if not info(page)['inCar']:
+    # helicopter up, tyre smoke already hanging on the avenue). The car is driven with real
+    # key events; the first frame where the hero is clear, the pack is behind at a tail gap and
+    # the drift smoke is still in the air is the cover. Capturing at once keeps that smoke.
+    boot(page, '?scene=chase', 1.4)
+    start = info(page)
+    if not start['inCar']:
         print('  no car in the chase scene'); return False
     best, t0 = -1, time.time()
     page.keyboard.down('KeyW')
-    while time.time() - t0 < 22:
+    while time.time() - t0 < 10:
         i = info(page)
-        score = (i['behind'] * 4 + i['copsSee'] * 2 + i['wanted'] * 2 + i['speed'] * 0.06
-                 + min(i['traffic'], 10) + min(i['peds'], 16) * 0.3 + min(i['smoke'], 10) * 0.5
-                 - i['blocked'] * 3 - i['overlap'] * 4)
-        if (i['wanted'] >= 3 and i['seen'] and i['behind'] >= 2 and i['speed'] > 225
-                and i['carHp'] > 0.55 and i['smoke'] >= 1 and i['flash'] == 0 and not i['dead'] and score > best):
+        score = (i['behind'] * 8 + i['copsSee'] * 3 + i['wanted'] * 2 + i['speed'] * 0.05
+                 + min(i['traffic'], 12) + min(i['peds'], 20) * 0.25 + min(i['smoke'], 16) * 1.0
+                 + min(i['tailGap'], 340) * 0.02 - i['blocked'] * 2 - i['overlap'] * 8)
+        if (i['wanted'] >= 3 and i['seen'] and i['behind'] >= 2 and i['speed'] > 200
+                and i['carHp'] > 0.3 and i['overlap'] == 0 and not i['dead']
+                and i['tailGap'] > 70 and i['smoke'] >= 4):
             best = score
             save(page, os.path.join(out, '1-chase.jpg'))
             print('  candidate score', round(score, 1), flush=True)
-            if score > 42:
+            if score > 80:
                 break
-        # a short handbrake stab lays rubber and throws smoke without losing the lead
-        if int(time.time() - t0) % 3 == 0:
-            page.keyboard.down('Space')
-            wait(page, 0.14)
-            page.keyboard.up('Space')
-        wait(page, 0.2)
+        wait(page, 0.08)
     page.keyboard.up('KeyW')
     return best > 0
 
 
 # ---------------------------------------------------------------------------------------------
 def city(page, out):
-    # the photo scene starts Sol at the wheel of a Rayo GT in Centro; the cruise itself is driven
-    boot(page, '?scene=city', 5.0)
+    # The photo scene starts Sol at the wheel of a Rayo GT in Centro; the cruise itself is
+    # driven south down Av. Faro and back, with the camera kept on the packed tower blocks.
+    boot(page, '?scene=city', 6.0)
     if not info(page)['inCar']:
         print('  city scene did not start in a car'); return False
-    drive(page, 's', 8, gas=225, dry=True)
+    drive(page, 's', 8, gas=205, dry=True)
     heading = 's'
     best, t0 = -1, time.time()
     while time.time() - t0 < 60:
         i = info(page)
-        if heading == 's' and i['y'] > 1960:
-            heading = 'n'; drive(page, 'n', 8, gas=225, dry=True)
-        elif heading == 'n' and i['y'] < 700:
-            heading = 's'; drive(page, 's', 8, gas=225, dry=True)
-        score = min(i['traffic'], 14) * 2.2 + min(i['peds'], 40) * 0.45 + (7 if i['speed'] > 110 else 0)
-        if i['wanted'] == 0 and i['speed'] > 90 and i['traffic'] >= 9 and i['peds'] >= 18 and score > best and not i['bigText'] and not i['banner']:
+        if heading == 's' and i['y'] > 1900:
+            heading = 'n'; drive(page, 'n', 8, gas=205, dry=True)
+        elif heading == 'n' and i['y'] < 760:
+            heading = 's'; drive(page, 's', 8, gas=205, dry=True)
+        score = min(i['traffic'], 18) * 1.8 + min(i['peds'], 45) * 0.7 + (10 if i['speed'] > 120 else 0)
+        # downtown must read as downtown: a clean record, real speed, a packed avenue and
+        # people on the pavements, with the hero car undamaged
+        if (i['wanted'] == 0 and i['speed'] > 110 and i['traffic'] >= 12 and i['peds'] >= 24
+                and i['carHp'] > 0.9 and score > best and not i['bigText'] and not i['banner']
+                and not i['subtitle']):
             best = score
             save(page, os.path.join(out, '2-city.jpg'))
             print('  candidate score', round(score, 1), flush=True)
-            if score > 44:
+            if score > 46:
                 return True
-        wait(page, 0.35)
+        wait(page, 0.3)
     return best > 0
 
 
@@ -322,7 +330,7 @@ def mission(page, out):
             wait(page, 0.3); continue
         score = (10 if taxi['d'] < 260 else 0) + min(i['traffic'], 10) + min(i['peds'], 18) * 0.35 + i['speed'] * 0.03
         if (taxi['d'] < 320 and i['speed'] > 120 and i['x'] < 3300 and score > best and not i['bigText']
-                and not i['subtitle'] and not i['banner'] and i['flash'] == 0):
+                and not i['subtitle'] and not i['banner'] and i['flash'] == 0 and i['wanted'] >= 1):
             best = score
             save(page, os.path.join(out, '3-mission.jpg'))
             print('  candidate score', round(score, 1), 'cab', round(taxi['d']), flush=True)

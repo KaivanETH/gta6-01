@@ -11,6 +11,9 @@
 // Play it locally with `node serve.ts`, then open http://localhost:8080.
 // Outside the grader's container, MAKEFUN_OUTPUT_DIR stands in for /output:
 //   mkdir -p out && MAKEFUN_OUTPUT_DIR=out node main.ts
+//
+// buildDossier refuses anything the scorer would: more than 4 screenshots or one over
+// 256 KiB, more than 993 entries or 48 MiB under game/, or a game path over 1000 bytes.
 
 import { cpSync, existsSync, mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';

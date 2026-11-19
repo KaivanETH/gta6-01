@@ -76,7 +76,8 @@ export function damagePlayer(state, amount) {
   pl.armor -= absorbed;
   pl.health -= amount - absorbed;
   pl.hurt = 0.25;
-  shake(state, 3);
+  // the camera kick scales with the hit so a shotgun blast out of a sedan feels heavier than a pistol tick
+  shake(state, Math.min(9, 2.5 + amount * 0.06));
   if (pl.health <= 0) { pl.health = 0; state.onWasted && state.onWasted(); }
 }
 
@@ -99,6 +100,8 @@ export function playerFire(state, ox, oy, angle) {
   pl.ammo[pl.weapon]--;
   pl.attackCd = wpn.cooldown;
   muzzleFlash(state, ox + Math.cos(angle) * 10, oy + Math.sin(angle) * 10, angle);
+  // a drive-by opens the window sparkle so the exchange reads from the chase camera
+  if (pl.vehicle) sparks(state, ox + Math.cos(angle) * 14, oy + Math.sin(angle) * 14, 3);
   sfx.shot(pl.weapon);
   shake(state, pl.weapon === 'shotgun' ? 5 : 1.5);
   for (let k = 0; k < wpn.pellets; k++) {

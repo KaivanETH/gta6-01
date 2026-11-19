@@ -46,7 +46,7 @@ export function titleMenu(state) {
 
 export function pauseMenu(state) {
   return {
-    id: 'pause', title: 'PAUSED', subtitle: 'Bahía Dorada', items: [
+    id: 'pause', title: 'PAUSED', subtitle: `Bahía Dorada · Story ${state.story.completed.length}/7 · ${formatMoney(state.cash)}`, items: [
       { label: 'Resume', run: () => closeMenu(state) },
       { label: 'City Map', run: () => openMenu(state, { id: 'map', kind: 'map', items: [{ label: 'Back', run: () => closeMenu(state) }] }) },
       { label: 'Mission Log', run: () => openMenu(state, missionLogMenu(state)) },
@@ -268,8 +268,12 @@ function drawTitle(ctx, state, view, time, m) {
     itemRects.push({ x, y, w, h: 46, i });
     y += 56;
   });
-  t(ctx, 'An original open-world crime game · every name, place and sound is fictional and made in code', W / 2, H - 22, 13, 'rgba(255,255,255,0.7)', 'center', 'normal');
-  t(ctx, 'Enter to select', x, y + 10, 13, '#ccc', 'left', 'normal');
+  // a soft footer plate keeps the subtitle and credit line legible over bright beach art
+  const fw = 760;
+  ctx.fillStyle = 'rgba(8,4,24,0.45)';
+  rrect(ctx, W / 2 - fw / 2, H - 36, fw, 26, 13); ctx.fill();
+  t(ctx, 'An original open-world crime game · every name, place and sound is fictional and made in code', W / 2, H - 23, 13, 'rgba(255,255,255,0.86)', 'center', 'normal');
+  t(ctx, 'Enter to select  ·  ↑↓ move', x, y + 10, 13, '#e8e8e8', 'left', 'normal');
 }
 
 function drawPalmSilhouette(ctx, x, y, s, time) {

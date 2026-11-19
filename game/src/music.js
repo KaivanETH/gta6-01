@@ -97,6 +97,8 @@ function schedule() {
   }
 }
 
+// The soundtrack switches by situation (title, on foot, radio while driving, tension at 3+
+// stars); a change resets the sequencer so the new track starts on its downbeat.
 export function setMusic(name) {
   if (name === current) return;
   current = name;

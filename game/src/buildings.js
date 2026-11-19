@@ -295,9 +295,11 @@ function drawNeon(ctx, s, night, time) {
     ctx.fillStyle = '#ffffff'; ctx.globalAlpha = 0.6 * night * flicker; ctx.fillText(n.text, tx, ty);
     ctx.restore();
   } else {
+    // daylight: the sign is a painted panel with a coloured face, still legible on white roofs
     const tw = ctx.measureText(n.text).width;
-    ctx.fillStyle = 'rgba(30,30,40,0.75)'; ctx.fillRect(tx - tw / 2 - 4, ty - size / 2 - 2, tw + 8, size + 4);
-    ctx.fillStyle = shadeColor(n.color, -0.1); ctx.fillText(n.text, tx, ty);
+    ctx.fillStyle = 'rgba(30,30,40,0.8)'; ctx.fillRect(tx - tw / 2 - 5, ty - size / 2 - 3, tw + 10, size + 6);
+    ctx.strokeStyle = n.color; ctx.lineWidth = 1.5; ctx.strokeRect(tx - tw / 2 - 5, ty - size / 2 - 3, tw + 10, size + 6);
+    ctx.fillStyle = shadeColor(n.color, 0.15); ctx.fillText(n.text, tx, ty);
   }
 }
 

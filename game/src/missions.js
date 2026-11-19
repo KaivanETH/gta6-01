@@ -249,7 +249,8 @@ const STEPS = {
       const me = playerXY(state);
       for (const g of m.enemies) if (!g.hostile && g.state !== 'dead' && dist2(g.x, g.y, me.x, me.y) < 300 * 300) alertGang(state, st.tag);
       const left = m.enemies.filter((g) => g.state !== 'dead').length;
-      m.extra = { label: 'Enemies left', count: left };
+      const total = m.enemies.length;
+      m.extra = { label: `Enemies left — ${total - left}/${total} down`, count: left };
       if (left === 0) { m.extra = null; return 'done'; }
     },
     marker(state, m) {
@@ -320,6 +321,7 @@ export function updateMission(state, dt) {
       const g = state.world.landmarks[MISSIONS[idx].giver];
       const me = playerXY(state);
       const slow = !state.player.vehicle || Math.hypot(state.player.vehicle.vx, state.player.vehicle.vy) < 120;
+      // you can only take a job with a clean record; a chase on your tail blocks the start
       if (slow && dist2(g.x, g.y, me.x, me.y) < 30 * 30 && state.wanted.level === 0) startMission(state, idx);
       else if (slow && dist2(g.x, g.y, me.x, me.y) < 30 * 30 && !state.wantedHintShown) { state.wantedHintShown = true; toast(state, 'Lose your wanted level before starting a mission', '#ff9a9a', 3); }
     }
@@ -337,6 +339,7 @@ export function passMission(state) {
   state.cash += m.def.reward;
   state.story.completed.push(m.def.id);
   state.story.next = Math.max(state.story.next, m.index + 1);
+  state.stats.missionsDone = (state.stats.missionsDone || 0) + 1;
   bigMessage(state, 'MISSION PASSED', '+' + formatMoney(m.def.reward), '#7ddc6a', 4);
   sfx.pass();
   cleanupMission(state, true);

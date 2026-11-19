@@ -77,6 +77,8 @@ export function applyPropertyPerks(state) {
   state.player.maxArmor = state.properties.penthouse ? 150 : 100;
 }
 
+// Resting at Casa Brisa: full heal, the penthouse's armor bonus, and a jump to the next
+// sensible hour (dusk if it is daytime, morning if it is not).
 export function restAtSafehouse(state) {
   const pl = state.player;
   pl.health = pl.maxHealth;
@@ -93,7 +95,11 @@ export function updateEconomy(state, dt) {
   const hour = Math.floor(state.clock / SECONDS_PER_HOUR);
   if (hour !== state.clubIncomeHour) {
     state.clubIncomeHour = hour;
-    if (state.properties.club) { state.cash += 300; toast(state, 'Club Marea income +$300', '#b37dff', 2); }
+    if (state.properties.club) {
+      // the club pays every in-game hour, including hours fast-forwarded by a rest
+      state.cash += 300;
+      if (state.mode === 'play') toast(state, 'Club Marea income +$300', '#b37dff', 2);
+    }
   }
   // garage respray when driving in
   const pl = state.player;
@@ -109,7 +115,8 @@ export function updateEconomy(state, dt) {
       v.health = v.maxHealth; v.onFire = false;
       v.color = rng.pick(VEHICLE_TYPES[v.type].colors.concat(['#ff4f7b', '#2ec4b6', '#ffffff']));
       const had = state.wanted.level > 0;
-      if (state.wanted.level <= 3) clearPolice(state);
+      // a respray only shakes up to a three-star search; a four- or five-star hunt keeps its heat
+      if (state.wanted.level > 0 && state.wanted.level <= 3) clearPolice(state);
       sfx.cash();
       bigMessage(state, 'FRESH PAINT', cost ? `Repaired & resprayed −$${cost}${had ? ' · heat cleared' : ''}` : `On the house, partner${had ? ' · heat cleared' : ''}`, '#3a86ff', 3);
     }

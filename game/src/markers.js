@@ -21,14 +21,22 @@ export function drawMarkers(ctx, state, time, b) {
     ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.stroke();
     ctx.fillStyle = '#fff'; ctx.font = 'bold 12px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
     ctx.fillText(m.icon || '!', m.x, by + 1);
-    if (m.label) {
-      ctx.font = 'bold 11px sans-serif';
-      const w = ctx.measureText(m.label).width + 10;
-      ctx.fillStyle = 'rgba(0,0,0,0.6)'; ctx.fillRect(m.x - w / 2, by - 30, w, 15);
-      ctx.fillStyle = '#fff'; ctx.fillText(m.label, m.x, by - 22);
-    }
+    if (m.label) markerLabel(ctx, m, m.x, by - 22);
     state.markerLights.push(m);
   }
+}
+
+// Marker labels sit on a tiny dark plate: names stay readable over white tower roofs and
+// bright sand, which is where most of the city's landmarks live.
+export function markerLabel(ctx, m, x, y) {
+  if (!m || !m.label) return;
+  ctx.font = 'bold 11px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  const w = ctx.measureText(m.label).width + 12;
+  ctx.fillStyle = 'rgba(4,4,18,0.66)';
+  ctx.fillRect(x - w / 2, y - 7, w, 14);
+  ctx.strokeStyle = hexA(m.color || '#ffffff', 0.55); ctx.lineWidth = 1;
+  ctx.strokeRect(x - w / 2 + 0.5, y - 6.5, w - 1, 13);
+  ctx.fillStyle = '#ffffff'; ctx.fillText(m.label, x, y + 0.5);
 }
 
 export function hexA(hex, a) {

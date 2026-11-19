@@ -67,11 +67,13 @@ function freshState() {
 
 // Seed traffic and pedestrians around a point so the city is alive immediately.
 function populateAround(x, y) {
-  for (let i = 0; i < 30; i++) {
-    const e = randomEdgeNear(rng, x, y, 150, 1300);
+  // A full city needs both: lanes busy in every direction and people on every sidewalk.
+  // Seed both counts together so no corner of the viewport starts hollow.
+  for (let i = 0; i < 46; i++) {
+    const e = randomEdgeNear(rng, x, y, 120, 1400);
     if (e) state.vehicles.push(makeTrafficCar(state, e.a, e.b));
   }
-  for (let i = 0; i < 60; i++) managePopulation(state, 1);
+  for (let i = 0; i < 90; i++) managePopulation(state, 1);
 }
 
 const TITLE_PANS = [
@@ -141,7 +143,9 @@ function onDeath(kind) {
   if (pl.vehicle) exitVehicle(state, true);
   pl.dead = true;
   state.deathKind = kind;
+  // WASTED / BUSTED hold the black-out for a beat so the overlay is read, not missed
   state.respawnTimer = 3.5;
+  state.camera.shake = 16;
   state.stats[kind]++;
   if (state.mission) failMission(state, kind === 'busted' ? 'You got busted' : 'You died');
 }
@@ -157,7 +161,7 @@ function respawn() {
   if (busted) { for (const w of ['smg', 'shotgun']) pl.ammo[w] = Math.floor((pl.ammo[w] || 0) / 2); }
   if (!pl.weapons[pl.weapon]) pl.weapon = 'fist';
   clearPolice(state);
-  state.camera.x = pl.x; state.camera.y = pl.y;
+  state.camera.x = pl.x; state.camera.y = pl.y; state.camera.zoom = 1.12;
   toast(state, `${busted ? 'Bail' : 'Hospital bill'}: −$${loss}`, '#ff6b6b', 3);
 }
 
@@ -174,7 +178,12 @@ function frameInput() {
     return;
   }
   if (wasPressed('Escape') || wasPressed('KeyP')) { state.mode = 'menu'; openMenu(state, pauseMenu(state)); return; }
-  if (wasPressed('KeyM')) { state.mode = 'menu'; openMenu(state, { id: 'map', kind: 'map', items: [{ label: 'Back', run: () => { state.menuStack.pop(); state.mode = 'play'; } }] }); return; }
+  if (wasPressed('KeyM')) {
+    // the full city map is a reading surface, not a simulation pause: the world keeps running
+    state.mode = 'menu';
+    openMenu(state, { id: 'map', kind: 'map', items: [{ label: 'Back', run: () => { state.menuStack.pop(); state.mode = 'play'; } }] });
+    return;
+  }
   if (wasPressed('Tab') && state.player.vehicle) { state.radio = (state.radio + 1) % RADIO_STATIONS.length; toast(state, '♪ ' + RADIO_STATIONS[state.radio].name, RADIO_STATIONS[state.radio].color, 2); }
   if ((wasPressed('KeyE') || wasPressed('KeyF')) && !state.player.dead) {
     const it = interactableAt(state);
@@ -294,8 +303,11 @@ function frame(now) {
   requestAnimationFrame(frame);
 }
 
+let bootCleared = false;
 function draw() {
   renderWorld(ctx, state, view, state.time);
+  // the static boot label in index.html covers the cold-start gap; drop it on the first frame
+  if (!bootCleared) { bootCleared = true; document.getElementById('boot')?.remove(); }
   if (state.mode === 'play' || (state.mode === 'menu' && topMenu(state)?.kind !== 'map')) drawHUD(ctx, state, view, state.time);
   if (state.mode === 'intro') drawIntro(ctx, state, view, state.time);
   if (state.mode === 'menu' || state.mode === 'title') drawMenu(ctx, state, view, state.time);

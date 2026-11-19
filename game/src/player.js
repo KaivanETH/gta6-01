@@ -84,7 +84,8 @@ export function updatePlayer(state, dt, view) {
     if (d2 < 15 * 15 && d2 > 0.01) { const d = Math.sqrt(d2); p.x += dx / d * (15 - d) * 0.6; p.y += dy / d * (15 - d) * 0.6; }
   }
 
-  // attack
+  // attack: mouse aims where the cursor is, Space slashes/throws toward the facing (with
+  // a gentle auto-aim toward the nearest hostile in the arc), so keyboard-only play works
   if (mouse.down || anyDown('Space', 'KeyJ')) {
     let aim = pl.a;
     if (!(mouse.moved > 0 || mouse.down)) {
@@ -189,6 +190,7 @@ export function exitVehicle(state, forced) {
   sfx.door();
 }
 
+// Speedometer readout in km/h; 10 world px ≈ 1 m, so px/s / 10 * 3.6.
 export function playerSpeedKmh(state) {
   const v = state.player.vehicle;
   return v ? Math.abs(forwardSpeed(v)) / 10 * 3.6 : 0;
